@@ -6,30 +6,26 @@ using UnityEngine;
 public abstract class CharacterMovement : MonoBehaviour
 {
 
-    [SerializeField] public CharacterController controller;
+    public CharacterController controller;
 
-    public float velocity = 2.5f;
+    public float velocity;
 
-    public float gravity = -9.81f;
+    public float gravity;
 
     public Vector3 movement;
 
     // Start is called before the first frame update
-    void Start()
+    public virtual void Start()
     {
         controller = GetComponent<CharacterController>();
         movement = controller.transform.position;
 
-        velocity = 2.5f;
+        velocity = 5f;
         gravity = -9.81f;
     }
 
     // Update is called once per frame
-    void Update()
-    {
-        
-        
-    }
+    public abstract void Update();
 
     public void Movement()
     {
@@ -46,7 +42,6 @@ public abstract class CharacterMovement : MonoBehaviour
         controller.Move(movement);
         movement = Vector3.zero;
     }
-
     public abstract void MoveLogic();
 
     public void MoveUp()
