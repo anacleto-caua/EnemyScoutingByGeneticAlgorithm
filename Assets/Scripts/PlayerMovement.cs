@@ -38,4 +38,9 @@ public class PlayerMovement : CharacterMovement
             MoveRight();
         }
     }
+
+    public void Captured()
+    {
+        Debug.Log("Ouch! They got me!");
+    }
 }
