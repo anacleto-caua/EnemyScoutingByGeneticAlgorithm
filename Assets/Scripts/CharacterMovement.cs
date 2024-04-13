@@ -6,7 +6,7 @@ using UnityEngine;
 public abstract class CharacterMovement : MonoBehaviour
 {
 
-    [SerializeField] public CharacterController controller;
+    public CharacterController controller;
 
     public float velocity = 2.5f;
 
@@ -27,8 +27,7 @@ public abstract class CharacterMovement : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
-        
+        Movement();
     }
 
     public void Movement()
