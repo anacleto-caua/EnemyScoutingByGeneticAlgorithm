@@ -25,7 +25,10 @@ public abstract class CharacterMovement : MonoBehaviour
     }
 
     // Update is called once per frame
-    public abstract void Update();
+    void Update()
+    {
+        Movement();
+    }
 
     public void Movement()
     {
