@@ -36,7 +36,7 @@ public class PlayerMovement : CharacterMovement
     //     }
     // }
 
-    public float speed = 5.0f;
+    public float speed = 8.0f;
     public Transform cam;
     public float turnSmoothTime = 0.1f;
     float turnSmoothVelocity;
