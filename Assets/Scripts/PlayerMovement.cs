@@ -15,8 +15,8 @@ public class PlayerMovement : CharacterMovement
     public override void Update()
     {
         Movement();
-        //RotateP90();
-        RotateP360();
+        
+        PlayerRotation();
     }
     // public override void MoveLogic()
     // {
@@ -69,7 +69,7 @@ public class PlayerMovement : CharacterMovement
 
     }
 
-    public int rotateP = 0;
+    bool rotateP90 = false;
     float currentPosition;
     bool isRotating = false;
     public float rotationSpeed = 1f;
@@ -78,15 +78,15 @@ public class PlayerMovement : CharacterMovement
     //OBS.: this function only works with the rotationSpeed set to 1
     public bool RotateP90()
     {
-        if (rotateP == 1)
+        if (rotateP90)
         {
             currentPosition = transform.localRotation.eulerAngles.y;
-            if(currentPosition + 90 > 360){
+            if(currentPosition + 90 >= 360){
                 currentPosition = -90;
             }
             transform.Rotate(0, 0.5f, 0);
             isRotating = true;
-            rotateP = 0;
+            rotateP90 = false;
         }else if(isRotating){
             
             if (transform.localRotation.eulerAngles.y < currentPosition + 90 || (currentPosition == -90 && transform.localRotation.eulerAngles.y > currentPosition + 91))
@@ -108,7 +108,7 @@ public class PlayerMovement : CharacterMovement
     {
         if(make360){
             if(!start360){
-                rotateP = 1;
+                rotateP90 = true;
                 start360 = true;
             }
             if(!completedRotation)
@@ -116,7 +116,7 @@ public class PlayerMovement : CharacterMovement
                 bool result = RotateP90();
             
                 if(result){
-                    rotateP = 1;
+                    rotateP90 = true;
                     rotate360Aux++;
                 }
                 if(rotate360Aux == 4){
@@ -125,10 +125,31 @@ public class PlayerMovement : CharacterMovement
                     completedRotation = true;
                 }
             }else{
+                rotateP90 = false;
                 make360 = false;
                 completedRotation = false;
+                start360 = false;
             }
             
+        }
+    }
+
+    public bool rotate90 = false;
+    bool rotationAux = false;
+    public void PlayerRotation()
+    {
+        if(make360){
+            RotateP360();
+        }else if(rotate90){
+            if(!rotationAux){
+                rotateP90 = true;
+                rotationAux = true;
+            }
+            bool rotate = RotateP90();
+            if(rotate){
+                rotate90 = false;
+                rotationAux = false;
+            }
         }
     }
 
