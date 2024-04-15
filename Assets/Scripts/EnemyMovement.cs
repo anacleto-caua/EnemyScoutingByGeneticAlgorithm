@@ -1,17 +1,36 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using TMPro;
+using UnityEditor.Callbacks;
 using UnityEngine;
+using UnityEngine.UIElements;
 using static UnityEngine.GraphicsBuffer;
 
 public class EnemyMovement : CharacterMovement
 {
+
     public float radius = 7.0f;
     public GameObject sphere;
 
     public float viewAngle = 45f; // Half of the FOV
     public float viewDistance = 50f; // How far the enemy can see
 
-    public LayerMask targetMask; // Layer to consider as targets
+    public List<string> actions;
+    public bool lastActionFinished;
+    public int idActions = 0;
+    public bool reverseActions = false;
+
+    public float a = 0f;
+    public float b = 0f;
+
+    public float targetAngle = 0;
+    public int angleIncrease = 5;
+    public int targetAngleRotation = 0;
+    // clockwise or counterclockwise
+    public string rotationDirection = "clockwise";
 
     // Start is called before the first frame update
     public override void Start()
@@ -35,18 +54,47 @@ public class EnemyMovement : CharacterMovement
 
         #endregion SphereHitbox
 
+        actions = new List<string>();
+        actions.Add("move_front");
+        actions.Add("move_front");
+        actions.Add("move_front");
+        actions.Add("move_front");
+        actions.Add("look_around");
     }
 
     // Update is called once per frame
     public override void Update()
     {
-        // Set the sphere's position to the center of the circle/sphere
-        sphere.transform.position = transform.position;
-
         Movement();
-
         ViewAround();
         ViewAhead();
+
+        if (!reverseActions)
+        {
+            ExecuteAction(actions[idActions]);
+        }
+        else
+        {
+            ExecuteAction(OpositeOfAction(actions[idActions]));
+        }
+
+        
+        if (targetAngleRotation != 0)
+        {
+            Rotate();
+        }
+
+
+        if (lastActionFinished)
+        {
+            idActions++;
+            if (idActions >= actions.Count)
+            {
+                idActions = 0;
+                reverseActions = !reverseActions;
+            }
+        }
+
 
         // Update the sphere's position and size if necessary
         sphere.transform.position = transform.position;
@@ -103,6 +151,7 @@ public class EnemyMovement : CharacterMovement
 
                     if (target.TryGetComponent<PlayerMovement>(out var player))
                     {
+                        Debug.Log("Player, found!");
                         player.Captured();
                     }
                 }
@@ -110,4 +159,159 @@ public class EnemyMovement : CharacterMovement
         }
     }
 
+    public void ExecuteAction(string action)
+    {
+        float difference = 0.0f;
+        switch (action)
+        {
+            case "look_around":
+                lastActionFinished = false;
+                if(targetAngleRotation <= 5)
+                {
+                    lastActionFinished = true;
+                    targetAngleRotation = 360;
+                }
+                
+                break;
+            case "look_front":
+                difference = Mathf.DeltaAngle(transform.eulerAngles.y, 0);
+
+                if (Mathf.Abs(difference) < 0.005f)
+                {
+                    // Finished the end of the rotation
+                    transform.Rotate(new Vector3(0, difference, 0));
+                }
+                else 
+                {
+                    targetAngleRotation = RoundAngle(difference);
+                }
+                break;
+            case "look_back":
+                difference = Mathf.DeltaAngle(transform.eulerAngles.y, 180);
+
+                if (Math.Abs(difference) < 0.005f)
+                {
+                    // Finished the end of the rotation
+                    transform.Rotate(new Vector3(0, difference, 0));
+                }
+                else
+                {
+                    targetAngleRotation = RoundAngle(difference);
+                }
+                break;
+            case "look_right":
+                difference = Mathf.DeltaAngle(transform.eulerAngles.y, 90);
+
+                if (Mathf.Abs(difference) < 0.005f)
+                {
+                    // Finished the end of the rotation
+                    transform.Rotate(new Vector3(0, difference, 0));
+                }
+                else
+                {
+                    targetAngleRotation += RoundAngle(difference);
+                }
+                break;
+            case "look_left":
+                difference = Mathf.DeltaAngle(transform.eulerAngles.y, 270);
+
+                if (Math.Abs(difference) < 0.005f)
+                {
+                    // Finished the end of the rotation
+                    transform.Rotate(new Vector3(0, difference, 0));
+                }
+                else
+                {
+                    targetAngleRotation += RoundAngle(difference);
+                }
+                break;
+            case "move_front":
+                if(targetAngleRotation <= 5 && lastActionFinished)
+                {
+                    ExecuteAction("look_front");
+                    lastActionFinished = false;
+                }
+                if(targetAngleRotation <= 5)
+                {
+                    MoveUp();
+                    lastActionFinished = true;
+                }
+                break;
+            case "move_back":
+                if(targetAngleRotation <= 5 && lastActionFinished) { 
+                    ExecuteAction("look_back");
+                    lastActionFinished = false;
+                }
+                if (targetAngleRotation <= 5)
+                {
+                    MoveUp();
+                    lastActionFinished = true;
+                }
+                break;
+
+        }
+    }
+
+    public void Rotate()
+    {
+
+        Vector3 eulers = new Vector3(0, 0, 0);
+
+        if(targetAngleRotation % 5 != 0){
+            eulers.y = targetAngleRotation;
+            targetAngleRotation = 0;
+        }
+
+        if(targetAngleRotation > 0)
+        {
+            eulers.y = angleIncrease;
+            targetAngleRotation -= angleIncrease;
+        }
+        else if(targetAngleRotation < 0)
+        {
+            eulers.y = -angleIncrease;
+            targetAngleRotation += angleIncrease;
+        }
+        
+        transform.Rotate(eulers);
+    }
+    public int RoundAngle(float angle)
+    {
+        float[] forbiddenAngles = { 0f, 90f, 180f, 270f, 360f , -180f, -90f};
+        float nearestForbiddenAngle = forbiddenAngles.OrderBy(x => Math.Abs((long)x - angle)).First();
+        if (Math.Abs(nearestForbiddenAngle - angle) > 0) // if the difference is less than 1 degree
+        {
+            while (angle < nearestForbiddenAngle)
+            {
+                angle += 1; // increase the angle if it's less than the forbidden angle
+            }
+         
+            while (angle > nearestForbiddenAngle)
+            {
+                angle -= 1; // decrease the angle if it's more than the forbidden angle
+            }
+        }
+        return (int)angle;
+    }
+
+    public string OpositeOfAction(string action)
+    {
+        if(action == "move_front")
+        {
+            return "move_back";
+        }
+
+        if (action == "move_back")
+        {
+            return "move_front";
+        }
+
+        if (action == "look_around")
+        {
+            return action;
+        }
+
+        Debug.LogWarning("Code not supposed to be hit!");
+        return "warning";
+    }
 }
