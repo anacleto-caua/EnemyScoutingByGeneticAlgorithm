@@ -15,6 +15,8 @@ public class PlayerMovement : CharacterMovement
     public override void Update()
     {
         Movement();
+        //RotateP90();
+        RotateP360();
     }
     // public override void MoveLogic()
     // {
@@ -65,6 +67,69 @@ public class PlayerMovement : CharacterMovement
             controller.Move(moveDir.normalized * speed * Time.deltaTime);
         }
 
+    }
+
+    public int rotateP = 0;
+    float currentPosition;
+    bool isRotating = false;
+    public float rotationSpeed = 1f;
+
+    //rotate +90 degrees in the y axis
+    //OBS.: this function only works with the rotationSpeed set to 1
+    public bool RotateP90()
+    {
+        if (rotateP == 1)
+        {
+            currentPosition = transform.localRotation.eulerAngles.y;
+            if(currentPosition + 90 > 360){
+                currentPosition = -90;
+            }
+            transform.Rotate(0, 0.5f, 0);
+            isRotating = true;
+            rotateP = 0;
+        }else if(isRotating){
+            
+            if (transform.localRotation.eulerAngles.y < currentPosition + 90 || (currentPosition == -90 && transform.localRotation.eulerAngles.y > currentPosition + 91))
+            {
+                transform.Rotate(0, rotationSpeed, 0);
+            }else{
+                isRotating = false;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    int rotate360Aux = 0;
+    bool completedRotation = false;
+    public bool make360 = false;
+    bool start360 = false;
+    public void RotateP360()
+    {
+        if(make360){
+            if(!start360){
+                rotateP = 1;
+                start360 = true;
+            }
+            if(!completedRotation)
+            {
+                bool result = RotateP90();
+            
+                if(result){
+                    rotateP = 1;
+                    rotate360Aux++;
+                }
+                if(rotate360Aux == 4){
+                    rotate360Aux = 0;
+                    start360 = false;
+                    completedRotation = true;
+                }
+            }else{
+                make360 = false;
+                completedRotation = false;
+            }
+            
+        }
     }
 
     public void Captured()
