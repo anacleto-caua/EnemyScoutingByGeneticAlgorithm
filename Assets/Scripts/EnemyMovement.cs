@@ -29,8 +29,11 @@ public class EnemyMovement : CharacterMovement
     public float targetAngle = 0;
     public int angleIncrease = 5;
     public int targetAngleRotation = 0;
-    // clockwise or counterclockwise
-    public string rotationDirection = "clockwise";
+
+    public float movementDistance = 0;
+    public bool lastMovementFinished = false;
+    public Vector3 targetPosition;
+    public Vector3 positionBeforeLastMovement;
 
     // Start is called before the first frame update
     public override void Start()
@@ -57,36 +60,44 @@ public class EnemyMovement : CharacterMovement
         actions = new List<string>();
         actions.Add("move_front");
         actions.Add("move_front");
-        actions.Add("move_front");
-        actions.Add("move_front");
+        actions.Add("move_left");
+        actions.Add("move_right");
+        actions.Add("move_right");
         actions.Add("look_around");
+
+        velocity = 2.8f;
+        gravity = -9.81f;
+        targetPosition = controller.transform.position;
     }
 
     // Update is called once per frame
     public override void Update()
     {
-        Movement();
+        Gravity();
         ViewAround();
         ViewAhead();
 
-        if (!reverseActions)
-        {
-            ExecuteAction(actions[idActions]);
-        }
-        else
-        {
-            ExecuteAction(OpositeOfAction(actions[idActions]));
-        }
-
-        
-        if (targetAngleRotation != 0)
+        if(targetAngleRotation != 0)
         {
             Rotate();
         }
-
-
-        if (lastActionFinished)
+        else if(controller.transform.position != targetPosition)
         {
+            Movement();
+        }
+        else
+        {
+            // Runs next action
+
+            if (!reverseActions)
+            {
+                ExecuteAction(actions[idActions]);
+            }
+            else
+            {
+                ExecuteAction(OpositeOfAction(actions[idActions]));
+            }
+
             idActions++;
             if (idActions >= actions.Count)
             {
@@ -94,7 +105,6 @@ public class EnemyMovement : CharacterMovement
                 reverseActions = !reverseActions;
             }
         }
-
 
         // Update the sphere's position and size if necessary
         sphere.transform.position = transform.position;
@@ -104,7 +114,6 @@ public class EnemyMovement : CharacterMovement
 
     public override void MoveLogic()
     {
-        
     }
     
     public void ViewAround()
@@ -165,12 +174,7 @@ public class EnemyMovement : CharacterMovement
         switch (action)
         {
             case "look_around":
-                lastActionFinished = false;
-                if(targetAngleRotation <= 5)
-                {
-                    lastActionFinished = true;
-                    targetAngleRotation = 360;
-                }
+                targetAngleRotation = 360;
                 
                 break;
             case "look_front":
@@ -184,6 +188,7 @@ public class EnemyMovement : CharacterMovement
                 else 
                 {
                     targetAngleRotation = RoundAngle(difference);
+
                 }
                 break;
             case "look_back":
@@ -226,29 +231,65 @@ public class EnemyMovement : CharacterMovement
                 }
                 break;
             case "move_front":
-                if(targetAngleRotation <= 5 && lastActionFinished)
-                {
-                    ExecuteAction("look_front");
-                    lastActionFinished = false;
-                }
-                if(targetAngleRotation <= 5)
-                {
-                    MoveUp();
-                    lastActionFinished = true;
-                }
+                ExecuteAction("look_front");
+                Vector3 targetRotation = Vector3.zero;
+                targetPosition = controller.transform.position;
+                targetPosition += controller.transform.forward * 3;
+                positionBeforeLastMovement = controller.transform.position;
+
                 break;
             case "move_back":
-                if(targetAngleRotation <= 5 && lastActionFinished) { 
-                    ExecuteAction("look_back");
-                    lastActionFinished = false;
-                }
-                if (targetAngleRotation <= 5)
-                {
-                    MoveUp();
-                    lastActionFinished = true;
-                }
+                ExecuteAction("look_back");
+                targetPosition = controller.transform.position;
+                targetPosition += controller.transform.forward * 3;
+                positionBeforeLastMovement = controller.transform.position;
+
+                break;
+            case "move_left":
+                ExecuteAction("look_left");
+                targetPosition = controller.transform.position;
+                targetPosition += controller.transform.forward * 3;
+                positionBeforeLastMovement = controller.transform.position;
+
+                break;
+            case "move_right":
+                ExecuteAction("look_right");
+                targetPosition = controller.transform.position;
+                targetPosition += controller.transform.forward * 3;
+                positionBeforeLastMovement = controller.transform.position;
+
                 break;
 
+        }
+    }
+
+    public override void Movement()
+    {
+        /*
+        Vector3 rotationSnapping = transform.rotation.eulerAngles;
+        rotationSnapping.y = RoundAngle(rotationSnapping.y);
+        float dif = rotationSnapping.y - transform.rotation.eulerAngles.y;
+        rotationSnapping = new Vector3(0, dif, 0);
+
+        transform.eulerAngles = rotationSnapping;
+        */
+
+        targetPosition = positionBeforeLastMovement + controller.transform.forward * 3;
+        
+        Gravity();
+        
+        controller.transform.position = Vector3.MoveTowards(controller.transform.position, targetPosition, velocity * Time.deltaTime);
+    }
+
+    public void Gravity()
+    {
+        if (!controller.isGrounded)
+        {
+            Vector3 gr = Vector3.zero;
+            gr.y = gravity * Time.deltaTime;
+            controller.Move(gr);
+            targetPosition.y = controller.transform.position.y;
+            positionBeforeLastMovement.y = controller.transform.position.y;
         }
     }
 
@@ -257,12 +298,13 @@ public class EnemyMovement : CharacterMovement
 
         Vector3 eulers = new Vector3(0, 0, 0);
 
-        if(targetAngleRotation % 5 != 0){
+        if (targetAngleRotation % 5 != 0 && targetAngleRotation > Math.Abs(5))
+        {
             eulers.y = targetAngleRotation;
             targetAngleRotation = 0;
         }
 
-        if(targetAngleRotation > 0)
+        if (targetAngleRotation > 0)
         {
             eulers.y = angleIncrease;
             targetAngleRotation -= angleIncrease;
@@ -306,6 +348,16 @@ public class EnemyMovement : CharacterMovement
             return "move_front";
         }
 
+        if (action == "move_left")
+        {
+            return "move_right";
+        }
+
+        if (action == "move_right")
+        {
+            return "move_left";
+        }
+
         if (action == "look_around")
         {
             return action;
@@ -314,4 +366,5 @@ public class EnemyMovement : CharacterMovement
         Debug.LogWarning("Code not supposed to be hit!");
         return "warning";
     }
+
 }

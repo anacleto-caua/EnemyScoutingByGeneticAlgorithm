@@ -251,6 +251,9 @@ MonoBehaviour:
   velocity: 2.5
   gravity: -9.81
   movement: {x: 0, y: 0, z: 0}
+  speed: 8
+  cam: {fileID: 0}
+  turnSmoothTime: 0.1
 --- !u!1 &165031864
 GameObject:
   m_ObjectHideFlags: 0
@@ -262,7 +265,6 @@ GameObject:
   - component: {fileID: 165031865}
   - component: {fileID: 165031868}
   - component: {fileID: 165031867}
-  - component: {fileID: 165031866}
   m_Layer: 0
   m_Name: Cube
   m_TagString: Untagged
@@ -285,27 +287,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1239800259}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &165031866
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 165031864}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 1, z: 1}
-  m_Center: {x: 0, y: 0, z: 0}
 --- !u!23 &165031867
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -891,6 +872,7 @@ MonoBehaviour:
   actions: []
   lastActionFinished: 0
   idActions: 0
+  reverseActions: 0
   a: 0
   b: 0
   targetAngle: 0

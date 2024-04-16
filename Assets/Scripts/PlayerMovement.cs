@@ -69,7 +69,7 @@ public class PlayerMovement : CharacterMovement
 
     public void Captured()
     {
-        Debug.Log("Ouch! They got me!");
+        //Debug.Log("Ouch! They got me!");
     }
 
 }
