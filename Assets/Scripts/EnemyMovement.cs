@@ -28,6 +28,9 @@ public class EnemyMovement : CharacterMovement
     public Vector3 targetPosition;
     public Vector3 positionBeforeLastMovement;
 
+    public float raycastDistance = .01f;  // The distance the raycast will check
+
+
     // Start is called before the first frame update
     public override void Start()
     {
@@ -49,10 +52,12 @@ public class EnemyMovement : CharacterMovement
         sphere.GetComponent<Renderer>().material = material;
 
         #endregion SphereHitbox
-
+        
         actions = new List<string>();
         actions.Add("move_front");
         actions.Add("move_front");
+        actions.Add("move_right");
+        actions.Add("move_right");
         actions.Add("move_right");
         actions.Add("move_right");
         actions.Add("look_around");
@@ -87,6 +92,7 @@ public class EnemyMovement : CharacterMovement
         }
         else if(controller.transform.position != targetPosition)
         {
+            WallAvoider();
             Movement();
         }
         else
@@ -295,6 +301,23 @@ public class EnemyMovement : CharacterMovement
             positionBeforeLastMovement.y = controller.transform.position.y;
         }
     }
+
+
+    public void WallAvoider()
+    {
+        // Cast a ray forward from this game object
+        RaycastHit hit;
+        if (Physics.Raycast(transform.position, transform.forward, out hit, raycastDistance))
+        {
+            // If the raycast hits an object that is not tagged as "Enemy", log a warning
+            if (!hit.transform.CompareTag("Enemy") && !hit.transform.CompareTag("Player"))
+            {
+                positionBeforeLastMovement = transform.position - transform.forward * 3;
+
+            }
+        }
+    }
+
 
     public void Rotate()
     {
