@@ -19,19 +19,12 @@ public class EnemyMovement : CharacterMovement
     public float viewDistance = 50f; // How far the enemy can see
 
     public List<string> actions;
-    public bool lastActionFinished;
     public int idActions = 0;
     public bool reverseActions = false;
 
-    public float a = 0f;
-    public float b = 0f;
-
-    public float targetAngle = 0;
     public int angleIncrease = 5;
     public int targetAngleRotation = 0;
 
-    public float movementDistance = 0;
-    public bool lastMovementFinished = false;
     public Vector3 targetPosition;
     public Vector3 positionBeforeLastMovement;
 
@@ -46,7 +39,7 @@ public class EnemyMovement : CharacterMovement
 
         // Set the sphere's scale based on the radius of the circle/sphere
         float diameter = radius * 2;
-        sphere.transform.localScale = new Vector3(diameter, 0.001f, diameter);
+        sphere.transform.localScale = new Vector3(diameter, diameter, diameter);
 
         // Optionally, set the sphere's material, e.g. to make it semi-transparent
         Material material = new(Shader.Find("Transparent/Diffuse"))
@@ -60,7 +53,6 @@ public class EnemyMovement : CharacterMovement
         actions = new List<string>();
         actions.Add("move_front");
         actions.Add("move_front");
-        actions.Add("move_left");
         actions.Add("move_right");
         actions.Add("move_right");
         actions.Add("look_around");
@@ -77,7 +69,19 @@ public class EnemyMovement : CharacterMovement
         ViewAround();
         ViewAhead();
 
-        if(targetAngleRotation != 0)
+        /**
+         * Basically:
+         * 
+         * Is there a rotation necessary? Do it and finishes the update
+         * Is there a movement necessary? Do it and finishes the update
+         * Isn't any rotation or movement necessary? Call the next Action and finishes the update 
+         * 
+         * It counts trough the Action List one by one, when it hits the n, 
+         * it activates "reverse mode" and runs the Action List from n to 0,
+         * looping forever in this patrol pattern
+         * 
+         */
+        if (targetAngleRotation != 0)
         {
             Rotate();
         }
@@ -87,29 +91,29 @@ public class EnemyMovement : CharacterMovement
         }
         else
         {
-            // Runs next action
+            if (idActions == actions.Count)
+            {
+                reverseActions = !reverseActions;
+                idActions--;
+            }
+            if(idActions == -1)
+            {
+                reverseActions = !reverseActions;
+                idActions++;
+            }
 
+            // Runs next action
             if (!reverseActions)
             {
                 ExecuteAction(actions[idActions]);
+                idActions++;
             }
             else
             {
                 ExecuteAction(OpositeOfAction(actions[idActions]));
-            }
-
-            idActions++;
-            if (idActions >= actions.Count)
-            {
-                idActions = 0;
-                reverseActions = !reverseActions;
+                idActions--;
             }
         }
-
-        // Update the sphere's position and size if necessary
-        sphere.transform.position = transform.position;
-        float diameter = radius * 2;
-        sphere.transform.localScale = new Vector3(diameter, diameter, diameter);
     }
 
     public override void MoveLogic()
@@ -160,7 +164,6 @@ public class EnemyMovement : CharacterMovement
 
                     if (target.TryGetComponent<PlayerMovement>(out var player))
                     {
-                        Debug.Log("Player, found!");
                         player.Captured();
                     }
                 }
@@ -205,7 +208,7 @@ public class EnemyMovement : CharacterMovement
                 }
                 break;
             case "look_right":
-                difference = Mathf.DeltaAngle(transform.eulerAngles.y, 90);
+                difference = Mathf.DeltaAngle(transform.eulerAngles.y, -270);
 
                 if (Mathf.Abs(difference) < 0.005f)
                 {
@@ -266,13 +269,13 @@ public class EnemyMovement : CharacterMovement
     public override void Movement()
     {
         /*
+        */
         Vector3 rotationSnapping = transform.rotation.eulerAngles;
         rotationSnapping.y = RoundAngle(rotationSnapping.y);
         float dif = rotationSnapping.y - transform.rotation.eulerAngles.y;
         rotationSnapping = new Vector3(0, dif, 0);
 
-        transform.eulerAngles = rotationSnapping;
-        */
+        transform.Rotate(rotationSnapping);
 
         targetPosition = positionBeforeLastMovement + controller.transform.forward * 3;
         
@@ -319,20 +322,11 @@ public class EnemyMovement : CharacterMovement
     }
     public int RoundAngle(float angle)
     {
-        float[] forbiddenAngles = { 0f, 90f, 180f, 270f, 360f , -180f, -90f};
-        float nearestForbiddenAngle = forbiddenAngles.OrderBy(x => Math.Abs((long)x - angle)).First();
-        if (Math.Abs(nearestForbiddenAngle - angle) > 0) // if the difference is less than 1 degree
-        {
-            while (angle < nearestForbiddenAngle)
-            {
-                angle += 1; // increase the angle if it's less than the forbidden angle
-            }
-         
-            while (angle > nearestForbiddenAngle)
-            {
-                angle -= 1; // decrease the angle if it's more than the forbidden angle
-            }
-        }
+        int[] forbiddenAngles = { 0, 90, 180, 270, 360, -180, -90, -270 };
+        int nearestForbiddenAngle = forbiddenAngles.OrderBy(x => Math.Abs((long)x - angle)).First();
+        
+        angle = nearestForbiddenAngle;
+        
         return (int)angle;
     }
 
