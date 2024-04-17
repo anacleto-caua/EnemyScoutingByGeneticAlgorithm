@@ -7,18 +7,19 @@ using TMPro;
 using UnityEditor.Callbacks;
 using UnityEngine;
 using UnityEngine.UIElements;
+using static Cinemachine.CinemachineTargetGroup;
 using static UnityEngine.GraphicsBuffer;
 
 public class EnemyMovement : CharacterMovement
 {
 
-    public float radius = 7.0f;
+    float radius = 3f;
     public GameObject sphere;
 
     public float viewAngle = 45f; // Half of the FOV
     public float viewDistance = 50f; // How far the enemy can see
 
-    public List<string> actions;
+    public List<string> actions = new();
     public int idActions = 0;
     public bool reverseActions = false;
 
@@ -28,8 +29,11 @@ public class EnemyMovement : CharacterMovement
     public Vector3 targetPosition;
     public Vector3 positionBeforeLastMovement;
 
-    public float raycastDistance = .01f;  // The distance the raycast will check
+    public float raycastDistance = 1f;  // The distance the raycast will check
 
+    #region AGParameters
+    int genes;
+    #endregion AGParameters
 
     // Start is called before the first frame update
     public override void Start()
@@ -38,11 +42,11 @@ public class EnemyMovement : CharacterMovement
 
         #region SphereHitbox
         // Set the sphere's position to the center of the circle/sphere
-        sphere.transform.position = transform.position;
+        Vector3 spherePos = transform.position;
 
         // Set the sphere's scale based on the radius of the circle/sphere
         float diameter = radius * 2;
-        sphere.transform.localScale = new Vector3(diameter, diameter, diameter);
+        sphere.transform.localScale = new Vector3(diameter, diameter , diameter);
 
         // Optionally, set the sphere's material, e.g. to make it semi-transparent
         Material material = new(Shader.Find("Transparent/Diffuse"))
@@ -51,16 +55,7 @@ public class EnemyMovement : CharacterMovement
         };
         sphere.GetComponent<Renderer>().material = material;
 
-        #endregion SphereHitbox
-        
-        actions = new List<string>();
-        actions.Add("move_front");
-        actions.Add("move_front");
-        actions.Add("move_right");
-        actions.Add("move_right");
-        actions.Add("move_right");
-        actions.Add("move_right");
-        actions.Add("look_around");
+        #endregion SphereHitbox        
 
         velocity = 2.8f;
         gravity = -9.81f;
@@ -73,6 +68,11 @@ public class EnemyMovement : CharacterMovement
         Gravity();
         ViewAround();
         ViewAhead();
+
+        if (targetAngleRotation == 0) {
+            WallAvoider();
+
+        }
 
         /**
          * Basically:
@@ -92,7 +92,6 @@ public class EnemyMovement : CharacterMovement
         }
         else if(controller.transform.position != targetPosition)
         {
-            WallAvoider();
             Movement();
         }
         else
@@ -122,30 +121,48 @@ public class EnemyMovement : CharacterMovement
         }
     }
 
+    #region AGBehaviourFunctions
+    public void GenerateInitialPatrolPattern(int genes)
+    {
+        this.genes = genes;
+        string[] possibleActions = { "move_front", "move_back", "move_right", "move_left", "look_around" };
+        int randomIndex = 0;
+
+        for (int i = 0; i < genes; i++)
+        {
+            randomIndex = UnityEngine.Random.Range(0, possibleActions.Length);
+            actions.Add(possibleActions[randomIndex]);
+        }
+    }
+    #endregion AGBehaviourFunctions
+
+    #region EnemyBehaviourFunctions
     public override void MoveLogic()
     {
     }
-    
     public void ViewAround()
     {
         // Get all colliders within the circle/sphere
         Collider[] entities = Physics.OverlapSphere(transform.position, radius);
 
         // Loop through the colliders and do something with each one
-        foreach (Collider entity in entities)
+        foreach (Collider target in entities)
         {
-            if (!entity.CompareTag("Player")) {
+            if (!target.CompareTag("Player"))
+            {
                 continue;
             }
 
-            if (entity.TryGetComponent<PlayerMovement>(out var player))
+            // Is player visible, or is him on the other side of the wall
+            if (IsPlayerVisibleFromHere(target))
             {
-                player.Captured();
+                if (target.TryGetComponent<PlayerMovement>(out var player))
+                {
+                    player.Captured();
+                }
             }
-
         }
     }
-
     public void ViewAhead()
     {
         Collider[] targetsInViewRadius = Physics.OverlapSphere(transform.position, viewDistance);
@@ -156,18 +173,13 @@ public class EnemyMovement : CharacterMovement
                 continue;
             }
             
+            // Is the player on the fog of view
             Vector3 dirToTarget = (target.transform.position - transform.position).normalized;
             if (Vector3.Angle(transform.forward, dirToTarget) < viewAngle)
             {
-                float distanceToTarget = Vector3.Distance(transform.position, target.transform.position);
-                Vector3 RaycastOrigin = transform.position + (transform.forward * 2);
-                if (!Physics.Raycast(RaycastOrigin, dirToTarget, distanceToTarget))
+                // Is player visible, or is him on the other side of the wall
+                if (IsPlayerVisibleFromHere(target))
                 {
-                    if (!target.CompareTag("Player"))
-                    {
-                        continue;
-                    }
-
                     if (target.TryGetComponent<PlayerMovement>(out var player))
                     {
                         player.Captured();
@@ -177,6 +189,24 @@ public class EnemyMovement : CharacterMovement
         }
     }
 
+    public bool IsPlayerVisibleFromHere(Collider target)
+    {
+        Vector3 dirToTarget = (target.transform.position - transform.position).normalized;
+
+        // Create a layer mask that includes all layers except the "EnemyBarrier" layer
+        int layerMask = 1 << LayerMask.NameToLayer("EnemyBarrier");
+        layerMask = ~layerMask;
+
+        float distanceToTarget = Vector3.Distance(transform.position, target.transform.position);
+        if (Physics.Raycast(transform.position, dirToTarget, out RaycastHit hit, distanceToTarget, layerMask))
+        {
+            if (hit.transform.CompareTag("Player"))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
     public void ExecuteAction(string action)
     {
         float difference = 0.0f;
@@ -271,7 +301,6 @@ public class EnemyMovement : CharacterMovement
 
         }
     }
-
     public override void Movement()
     {
         /*
@@ -289,7 +318,6 @@ public class EnemyMovement : CharacterMovement
         
         controller.transform.position = Vector3.MoveTowards(controller.transform.position, targetPosition, velocity * Time.deltaTime);
     }
-
     public void Gravity()
     {
         if (!controller.isGrounded)
@@ -301,23 +329,22 @@ public class EnemyMovement : CharacterMovement
             positionBeforeLastMovement.y = controller.transform.position.y;
         }
     }
-
-
     public void WallAvoider()
     {
-        // Cast a ray forward from this game object
-        RaycastHit hit;
-        if (Physics.Raycast(transform.position, transform.forward, out hit, raycastDistance))
-        {
-            // If the raycast hits an object that is not tagged as "Enemy", log a warning
-            if (!hit.transform.CompareTag("Enemy") && !hit.transform.CompareTag("Player"))
-            {
-                positionBeforeLastMovement = transform.position - transform.forward * 3;
+        // Create a layer mask that includes all layers except the "Player" and "Enemy" layers
+        int layerMask = (1 << LayerMask.NameToLayer("Player")) | (1 << LayerMask.NameToLayer("Enemy"));
+        layerMask = ~layerMask;
 
-            }
+        // Cast a ray forward from this game object
+        RaycastHit[] hits = Physics.RaycastAll(transform.position, transform.forward, raycastDistance, layerMask);
+
+        foreach (RaycastHit hit in hits)
+        {
+            positionBeforeLastMovement = transform.position - transform.forward * 3;
+            targetPosition = transform.position;
+            break; // Stop checking after finding the first non-Enemy and non-Player object
         }
     }
-
 
     public void Rotate()
     {
@@ -352,7 +379,6 @@ public class EnemyMovement : CharacterMovement
         
         return (int)angle;
     }
-
     public string OpositeOfAction(string action)
     {
         if(action == "move_front")
@@ -383,5 +409,6 @@ public class EnemyMovement : CharacterMovement
         Debug.LogWarning("Code not supposed to be hit!");
         return "warning";
     }
+    #endregion EnemyBehaviourFunctions
 
 }

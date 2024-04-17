@@ -1,3 +1,4 @@
+using Cinemachine;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -9,6 +10,19 @@ public class PlayerMovement : CharacterMovement
     public override void Start()
     {
         base.Start();
+
+        // Generate camera for scene
+        GameObject MainCamera = Resources.Load<GameObject>("Main Camera");
+        MainCamera = Instantiate(MainCamera, transform.position, Quaternion.identity);
+
+        GameObject FreeLookCamera = Resources.Load<GameObject>("FreeLook Camera");
+        FreeLookCamera = Instantiate(FreeLookCamera, transform.position, Quaternion.identity);
+
+        CinemachineFreeLook FreeLook = FreeLookCamera.GetComponent<CinemachineFreeLook>();
+        FreeLook.Follow = transform;
+        FreeLook.LookAt = transform;
+
+        cam = MainCamera.transform;
     }
 
     // Update is called once per frame
@@ -18,6 +32,10 @@ public class PlayerMovement : CharacterMovement
         
         PlayerRotation();
     }
+
+
+    #region PlayerRotationAndMovement
+
     // public override void MoveLogic()
     // {
     //     if (Input.GetKey(KeyCode.W))
@@ -152,6 +170,8 @@ public class PlayerMovement : CharacterMovement
             }
         }
     }
+
+    #endregion PlayerRotationAndMovement
 
     public void Captured()
     {

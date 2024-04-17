@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 5140214188228190427}
   - component: {fileID: 6283567793108149255}
   - component: {fileID: 6690157041932472410}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: ViewSphere
   m_TagString: Enemy
   m_Icon: {fileID: 0}
@@ -96,7 +96,7 @@ GameObject:
   - component: {fileID: 927565055722261135}
   - component: {fileID: 7642572787026414306}
   - component: {fileID: 6526757808631183882}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Enemy
   m_TagString: Enemy
   m_Icon: {fileID: 0}
@@ -112,7 +112,7 @@ Transform:
   m_GameObject: {fileID: 7095540169519841505}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 2, z: -5.22}
+  m_LocalPosition: {x: 0, y: 2, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -212,7 +212,6 @@ MonoBehaviour:
   velocity: 0
   gravity: 0
   movement: {x: 0, y: 0, z: 0}
-  radius: 15
   sphere: {fileID: 1880086569073516732}
   viewAngle: 45
   viewDistance: 10
@@ -235,7 +234,7 @@ GameObject:
   - component: {fileID: 668680956675134715}
   - component: {fileID: 7878893330682976682}
   - component: {fileID: 4823416066185716914}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Cube
   m_TagString: Enemy
   m_Icon: {fileID: 0}
