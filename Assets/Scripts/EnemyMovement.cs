@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using TMPro;
-using UnityEditor.Callbacks;
 using UnityEngine;
 using UnityEngine.UIElements;
 using static Cinemachine.CinemachineTargetGroup;
@@ -14,39 +13,55 @@ public class EnemyMovement : CharacterMovement
 {
 
     float radius = 3f;
-    public GameObject sphere;
+    // public GameObject sphere;
 
-    public float viewAngle = 45f; // Half of the FOV
-    public float viewDistance = 50f; // How far the enemy can see
+    float viewAngle = 45f; // Half of the FOV
+    float viewDistance = 50f; // How far the enemy can see
 
     public List<string> actions = new();
     public int idActions = 0;
     public bool reverseActions = false;
+    public string[] possibleActions = { "move_front", "move_back", "move_right", "move_left", "look_around" };
+
 
     public int angleIncrease = 5;
-    public int targetAngleRotation = 0;
+    int targetAngleRotation = 0;
 
-    public Vector3 targetPosition;
-    public Vector3 positionBeforeLastMovement;
+    Vector3 targetPosition;
+    Vector3 positionBeforeLastMovement;
 
-    public float raycastDistance = 1f;  // The distance the raycast will check
+    float raycastDistance = 0.1f;  // The distance the raycast will check
 
     #region AGParameters
     int genes;
+    bool scoredThisRound = false;
+    public float score;
     #endregion AGParameters
 
-    // Start is called before the first frame update
-    public override void Start()
+    public void Awake()
     {
-        base.Start();
+        targetPosition = controller.transform.position;
 
+        /*
         #region SphereHitbox
-        // Set the sphere's position to the center of the circle/sphere
-        Vector3 spherePos = transform.position;
+
+        // Create the sphere
+        // The sphere will be removed, but if you want try just draggin a normal sphere do this object and turn it public
+        sphere = new GameObject("LookAroundSphere");
+
+        // Add a SphereCollider to the GameObject
+        sphere.AddComponent<SphereCollider>();
+
+        // Add a MeshRenderer to the GameObject
+        sphere.AddComponent<MeshRenderer>();
+
+        // Create a sphere mesh
+        MeshFilter meshFilter = sphere.AddComponent<MeshFilter>();
+        meshFilter.mesh = new Mesh();
 
         // Set the sphere's scale based on the radius of the circle/sphere
         float diameter = radius * 2;
-        sphere.transform.localScale = new Vector3(diameter, diameter , diameter);
+        sphere.transform.localScale = new Vector3(diameter, diameter, diameter);
 
         // Optionally, set the sphere's material, e.g. to make it semi-transparent
         Material material = new(Shader.Find("Transparent/Diffuse"))
@@ -56,18 +71,29 @@ public class EnemyMovement : CharacterMovement
         sphere.GetComponent<Renderer>().material = material;
 
         #endregion SphereHitbox        
+        */
 
-        velocity = 2.8f;
+        velocity = 2.8f; 
         gravity = -9.81f;
-        targetPosition = controller.transform.position;
+    }
+
+    // Start is called before the first frame update
+    public override void Start()
+    {
+        base.Start();
     }
 
     // Update is called once per frame
     public override void Update()
     {
         Gravity();
-        ViewAround();
-        ViewAhead();
+
+        // Makes the enemy score only once per round Currently: INACTIVE See: IsPlayerVisibleFromHere()
+        if (!scoredThisRound)
+        {
+            ViewAround();
+            ViewAhead();
+        }
 
         if (targetAngleRotation == 0) {
             WallAvoider();
@@ -125,7 +151,6 @@ public class EnemyMovement : CharacterMovement
     public void GenerateInitialPatrolPattern(int genes)
     {
         this.genes = genes;
-        string[] possibleActions = { "move_front", "move_back", "move_right", "move_left", "look_around" };
         int randomIndex = 0;
 
         for (int i = 0; i < genes; i++)
@@ -133,6 +158,42 @@ public class EnemyMovement : CharacterMovement
             randomIndex = UnityEngine.Random.Range(0, possibleActions.Length);
             actions.Add(possibleActions[randomIndex]);
         }
+    }
+
+    public void Cross(EnemyMovement Father, EnemyMovement Mother)
+    {
+        for(int i = 0; i < genes; i++)
+        {
+            if(UnityEngine.Random.value > 0.5f)
+            {
+                actions[i] = Father.actions[i];
+            }
+            else
+            {
+                actions[i] = Mother.actions[i];
+            }
+        }
+
+    }
+
+    public void Mutate()
+    {
+        int randomIndex = UnityEngine.Random.Range(0, genes);
+        int randomGene = UnityEngine.Random.Range(0, possibleActions.Length);
+        actions[randomIndex] = possibleActions[randomGene];
+    }
+
+    public void ResetForNextRound(Vector3 spawPoint)
+    {
+        transform.position = spawPoint;
+        positionBeforeLastMovement = spawPoint;
+        targetPosition = spawPoint;
+
+        targetAngleRotation = 0;
+        transform.Rotate(Vector3.zero);
+
+        idActions = 0;
+        reverseActions = false;
     }
     #endregion AGBehaviourFunctions
 
@@ -153,14 +214,8 @@ public class EnemyMovement : CharacterMovement
                 continue;
             }
 
-            // Is player visible, or is him on the other side of the wall
-            if (IsPlayerVisibleFromHere(target))
-            {
-                if (target.TryGetComponent<PlayerMovement>(out var player))
-                {
-                    player.Captured();
-                }
-            }
+            // Is the player visible, or is him on the other side of the wall
+            IsPlayerVisibleFromHere(target);
         }
     }
     public void ViewAhead()
@@ -173,18 +228,12 @@ public class EnemyMovement : CharacterMovement
                 continue;
             }
             
-            // Is the player on the fog of view
+            // Is the player on the radius of view
             Vector3 dirToTarget = (target.transform.position - transform.position).normalized;
             if (Vector3.Angle(transform.forward, dirToTarget) < viewAngle)
             {
-                // Is player visible, or is him on the other side of the wall
-                if (IsPlayerVisibleFromHere(target))
-                {
-                    if (target.TryGetComponent<PlayerMovement>(out var player))
-                    {
-                        player.Captured();
-                    }
-                }
+                // Is the player visible, or is him on the other side of the wall
+                IsPlayerVisibleFromHere(target);
             }
         }
     }
@@ -202,6 +251,15 @@ public class EnemyMovement : CharacterMovement
         {
             if (hit.transform.CompareTag("Player"))
             {
+                if (target.TryGetComponent<PlayerMovement>(out var player))
+                {
+                    // Score points for how many time he sees the enemy
+                    score += Time.deltaTime;
+
+                    // Uncoment the following line will make the enemy pontuate only once per round
+                    // scoredThisRound = true;
+                    player.Captured();
+                }
                 return true;
             }
         }

@@ -5,6 +5,7 @@ using UnityEngine;
 
 public class PlayerMovement : CharacterMovement
 {
+    public bool finished = false;
 
     // Start is called before the first frame update
     public override void Start()
@@ -173,14 +174,24 @@ public class PlayerMovement : CharacterMovement
 
     #endregion PlayerRotationAndMovement
 
+    public void Repositionate(Vector3 spawn)
+    {
+        transform.position = spawn;
+        gameObject.transform.position = spawn;
+        cam.position = spawn;
+        controller.transform.position = spawn;
+        movement = Vector3.zero;
+    }
+
     public void Captured()
     {
-        Debug.Log("Ouch! They got me!!!");
+        //Debug.Log("Ouch! They got me!!!");
     }
 
     public void Escaped()
     {
-        Debug.Log("Player escaped!!!");
+        finished = true;
+        //Debug.Log("Player escaped!!!");
     }
 
 }

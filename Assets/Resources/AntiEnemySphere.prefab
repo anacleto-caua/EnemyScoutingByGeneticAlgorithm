@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 134697946754733092}
   - component: {fileID: 3002406848406594878}
   - component: {fileID: -5516110811029765942}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: AntiEnemySphere
   m_TagString: EnemyBarrier
   m_Icon: {fileID: 0}
@@ -97,7 +97,7 @@ CapsuleCollider:
     m_Bits: 0
   m_ExcludeLayers:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 1
   m_LayerOverridePriority: 0
   m_IsTrigger: 0
   m_ProvidesContacts: 0

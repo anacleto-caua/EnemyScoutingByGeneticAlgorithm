@@ -48,7 +48,7 @@ MeshRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1880086569073516732}
-  m_Enabled: 1
+  m_Enabled: 0
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
@@ -208,21 +208,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e8d30014e46fa9c439a17b6e3814263c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  controller: {fileID: 0}
+  controller: {fileID: 7642572787026414306}
   velocity: 0
   gravity: 0
   movement: {x: 0, y: 0, z: 0}
-  sphere: {fileID: 1880086569073516732}
-  viewAngle: 45
-  viewDistance: 10
   actions: []
   idActions: 0
   reverseActions: 0
+  possibleActions:
+  - move_front
+  - move_back
+  - move_right
+  - move_left
+  - look_around
   angleIncrease: 5
-  targetAngleRotation: 0
-  targetPosition: {x: 0, y: 0, z: 0}
-  positionBeforeLastMovement: {x: 0, y: 0, z: 0}
-  raycastDistance: 0.01
+  score: 0
 --- !u!1 &9057660679811624459
 GameObject:
   m_ObjectHideFlags: 0
