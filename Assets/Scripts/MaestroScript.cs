@@ -1,9 +1,6 @@
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.Assertions.Must;
-using UnityEngine.UIElements;
 
 public class MaestroScript : MonoBehaviour
 {
@@ -33,6 +30,8 @@ public class MaestroScript : MonoBehaviour
     public HeroScapeScript HeroScape;
 
     #endregion FunctionalVariables
+
+    public Camera MaestroCamera;
 
     // Awake is called before the any frame update
     void Awake()
@@ -166,6 +165,7 @@ public class MaestroScript : MonoBehaviour
         if(!PlayerMovement.finished && playerWillPlayNextRound && PlayerMovement.captured)
         {
             Debug.Log("Foi capturado!");
+            PlayerMovement.captured = false;
             RepositinateEntities();
         }
 
@@ -187,6 +187,10 @@ public class MaestroScript : MonoBehaviour
                 }
             }
 
+            // Undo cameras change
+            MaestroCamera.enabled = false;
+            PlayerMovement.PlayerCamera.enabled = true;
+
         }
         
         if(PlayerAutoMovement.finished)
@@ -207,6 +211,7 @@ public class MaestroScript : MonoBehaviour
 
             PlayerAutoMovement.finished = false;
 
+            // If the player will manually play the next round
             if (playerWillPlayNextRound)
             {
                 // Set time scale to default so player can feel ok playing
@@ -222,6 +227,10 @@ public class MaestroScript : MonoBehaviour
                         EnemyList[i].enabled = false;
                     }
                 }
+                
+                // Change cameras
+                MaestroCamera.enabled = false;
+                PlayerMovement.PlayerCamera.enabled = true;
             }
             else
             {

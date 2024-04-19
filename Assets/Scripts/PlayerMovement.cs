@@ -13,14 +13,16 @@ public class PlayerMovement : CharacterMovement
 
     public bool captured = false;
 
+    public Camera PlayerCamera;
+
     // Start is called before the first frame update
     public override void Start()
     {
         base.Start();
 
-        // Generate camera for scene
-        GameObject MainCamera = Resources.Load<GameObject>("Main Camera");
-        MainCamera = Instantiate(MainCamera, transform.position, Quaternion.identity);
+        // Generate MaestroCamera for scene
+        GameObject CameraPrefab = Resources.Load<GameObject>("Main Camera");
+        PlayerCamera = Instantiate(PlayerCamera, transform.position, Quaternion.identity).GetComponent<Camera>();
 
         GameObject FreeLookCamera = Resources.Load<GameObject>("FreeLook Camera");
         FreeLookCamera = Instantiate(FreeLookCamera, transform.position, Quaternion.identity);
@@ -29,7 +31,7 @@ public class PlayerMovement : CharacterMovement
         FreeLook.Follow = transform;
         FreeLook.LookAt = transform;
 
-        cam = MainCamera.transform;
+        cam = PlayerCamera.transform;
     }
 
     // Update is called once per frame
@@ -81,14 +83,14 @@ public class PlayerMovement : CharacterMovement
 
         if(direction.magnitude >= 0.1f)
         {
-            //angle of the camera in the y axis
+            //angle of the MaestroCamera in the y axis
             float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + cam.eulerAngles.y;
             //smoothly rotate the player to the target angle
             float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref turnSmoothVelocity, turnSmoothTime);
             //rotate the player
             transform.rotation = Quaternion.Euler(0, angle, 0);
 
-            //set the move direction to the direction the camera is facing
+            //set the move direction to the direction the MaestroCamera is facing
             Vector3 moveDir = Quaternion.Euler(0, targetAngle, 0) * Vector3.forward;
 
             //move the player

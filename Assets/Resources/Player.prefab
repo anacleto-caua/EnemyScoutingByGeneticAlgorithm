@@ -238,8 +238,9 @@ MonoBehaviour:
   finished: 0
   camPlay: 0
   captured: 0
+  PlayerCamera: {fileID: 6835030160530371383, guid: 273193e31a526df40a8ce28bdabc22b7, type: 3}
   speed: 16
-  cam: {fileID: 0}
+  cam: {fileID: 8146586697540523923, guid: 273193e31a526df40a8ce28bdabc22b7, type: 3}
   turnSmoothTime: 0.1
   rotationSpeed: 1
   make360: 0
@@ -271,7 +272,6 @@ MonoBehaviour:
   - look_around
   angleIncrease: 5
   score: 0
-  agent: {fileID: 0}
   finished: 0
   HeroScape: {x: 0, y: 0, z: 0}
 --- !u!114 &6408075212110291698
