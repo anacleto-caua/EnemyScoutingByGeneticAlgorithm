@@ -5,7 +5,6 @@ using UnityEngine.AI;
 
 public class AutomatedPlayerMovement : EnemyMovement
 {
-    public NavMeshAgent agent;
     public bool finished = false;
     public Vector3 HeroScape;
 

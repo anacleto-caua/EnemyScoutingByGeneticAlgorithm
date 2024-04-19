@@ -1,6 +1,7 @@
 using Cinemachine;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -9,6 +10,8 @@ public class PlayerMovement : CharacterMovement
     public bool finished = false;
 
     public bool camPlay = true;
+
+    public bool captured = false;
 
     // Start is called before the first frame update
     public override void Start()
@@ -192,6 +195,7 @@ public class PlayerMovement : CharacterMovement
 
     public void Captured()
     {
+        captured = true;
         //Debug.Log("Ouch! They got me!!!");
     }
 

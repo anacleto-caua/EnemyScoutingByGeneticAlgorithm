@@ -120,7 +120,6 @@ GameObject:
   - component: {fileID: 7560989672504073543}
   - component: {fileID: 8887141105704260032}
   - component: {fileID: 6408075212110291698}
-  - component: {fileID: -5078345369267842581}
   m_Layer: 3
   m_Name: Player
   m_TagString: Player
@@ -238,6 +237,7 @@ MonoBehaviour:
   movement: {x: 0, y: 0, z: 0}
   finished: 0
   camPlay: 0
+  captured: 0
   speed: 16
   cam: {fileID: 0}
   turnSmoothTime: 0.1
@@ -271,7 +271,7 @@ MonoBehaviour:
   - look_around
   angleIncrease: 5
   score: 0
-  agent: {fileID: -5078345369267842581}
+  agent: {fileID: 0}
   finished: 0
   HeroScape: {x: 0, y: 0, z: 0}
 --- !u!114 &6408075212110291698
@@ -286,25 +286,3 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8a443bfd9181bc34f9d1fb6c620f3227, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!195 &-5078345369267842581
-NavMeshAgent:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4874605180641686439}
-  m_Enabled: 1
-  m_AgentTypeID: 0
-  m_Radius: 0.5
-  m_Speed: 3.5
-  m_Acceleration: 8
-  avoidancePriority: 50
-  m_AngularSpeed: 120
-  m_StoppingDistance: 0
-  m_AutoTraverseOffMeshLink: 1
-  m_AutoBraking: 1
-  m_AutoRepath: 1
-  m_Height: 2
-  m_BaseOffset: 1
-  m_WalkableMask: 4294967295
-  m_ObstacleAvoidanceType: 4

@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.Assertions.Must;
 using UnityEngine.UIElements;
 
 public class MaestroScript : MonoBehaviour
@@ -37,7 +38,7 @@ public class MaestroScript : MonoBehaviour
     void Awake()
     {
         individuals = 20;
-        genes = 5;
+        genes = 20;
         roundsLimit = 5;
         removePercent = 50;
         mutantionChance = 20;
@@ -161,18 +162,31 @@ public class MaestroScript : MonoBehaviour
     public bool playerWillPlayNextRound = false;
     void Update()
     {
+        // If the player got captured during his turn playing
+        if(!PlayerMovement.finished && playerWillPlayNextRound && PlayerMovement.captured)
+        {
+            Debug.Log("Foi capturado!");
+            RepositinateEntities();
+        }
+
         if (PlayerMovement.finished && playerWillPlayNextRound)
         {
             OrderEnemiesList();
-            if (Enemies[0][0].score > 0)
-            {
-                Debug.Log("Foi capturado!");
-            }
+            
             playerWillPlayNextRound = false;
             PlayerAutoMovement.finished = true;
             EnablePlayerAutomatedMovement();
             DisablePlayerMovement();
-            
+
+            // Reanable all removed enemies to get back on training
+            foreach (List<EnemyMovement> EnemyList in Enemies)
+            {
+                for (int i = 1; i < individuals; i++)
+                {
+                    EnemyList[i].enabled = true;
+                }
+            }
+
         }
         
         if(PlayerAutoMovement.finished)
@@ -199,11 +213,20 @@ public class MaestroScript : MonoBehaviour
                 Time.timeScale = 1; 
                 DisablePlayerAutomatedMovement();
                 EnablePlayerMovement();
+
+                //Remove all enemies except the best ones to go agains the player
+                foreach (List<EnemyMovement> EnemyList in Enemies)
+                {
+                    for (int i = 1; i < individuals; i++)
+                    {
+                        EnemyList[i].enabled = false;
+                    }
+                }
             }
             else
             {
                 // Set time scale high so the training will be faster
-                Time.timeScale = 5;
+                Time.timeScale = 10;
             }
         }
 
