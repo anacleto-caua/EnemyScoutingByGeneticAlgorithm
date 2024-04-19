@@ -4,46 +4,64 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using TMPro;
-using UnityEditor.Callbacks;
 using UnityEngine;
 using UnityEngine.UIElements;
+using static Cinemachine.CinemachineTargetGroup;
 using static UnityEngine.GraphicsBuffer;
 
 public class EnemyMovement : CharacterMovement
 {
 
-    public float radius = 7.0f;
-    public GameObject sphere;
+    float radius = 3f;
+    // public GameObject sphere;
 
-    public float viewAngle = 45f; // Half of the FOV
-    public float viewDistance = 50f; // How far the enemy can see
+    float viewAngle = 45f; // Half of the FOV
+    float viewDistance = 50f; // How far the enemy can see
 
-    public List<string> actions;
-    public bool lastActionFinished;
+    public List<string> actions = new();
     public int idActions = 0;
     public bool reverseActions = false;
+    public string[] possibleActions = { "move_front", "move_back", "move_right", "move_left", "look_around" };
 
-    public float a = 0f;
-    public float b = 0f;
 
-    public float targetAngle = 0;
     public int angleIncrease = 5;
-    public int targetAngleRotation = 0;
-    // clockwise or counterclockwise
-    public string rotationDirection = "clockwise";
+    protected int targetAngleRotation = 0;
 
-    // Start is called before the first frame update
-    public override void Start()
+    protected Vector3 targetPosition;
+    protected Vector3 positionBeforeLastMovement;
+
+    protected float raycastDistance = 0.1f;  // The distance the raycast will check
+
+    #region AGParameters
+    int genes;
+    bool scoredThisRound = false;
+    public float score;
+    #endregion AGParameters
+
+    public void Awake()
     {
-        base.Start();
+        targetPosition = controller.transform.position;
 
+        /*
         #region SphereHitbox
-        // Set the sphere's position to the center of the circle/sphere
-        sphere.transform.position = transform.position;
+
+        // Create the sphere
+        // The sphere will be removed, but if you want try just draggin a normal sphere do this object and turn it public
+        sphere = new GameObject("LookAroundSphere");
+
+        // Add a SphereCollider to the GameObject
+        sphere.AddComponent<SphereCollider>();
+
+        // Add a MeshRenderer to the GameObject
+        sphere.AddComponent<MeshRenderer>();
+
+        // Create a sphere mesh
+        MeshFilter meshFilter = sphere.AddComponent<MeshFilter>();
+        meshFilter.mesh = new Mesh();
 
         // Set the sphere's scale based on the radius of the circle/sphere
         float diameter = radius * 2;
-        sphere.transform.localScale = new Vector3(diameter, 0.001f, diameter);
+        sphere.transform.localScale = new Vector3(diameter, diameter, diameter);
 
         // Optionally, set the sphere's material, e.g. to make it semi-transparent
         Material material = new(Shader.Find("Transparent/Diffuse"))
@@ -52,81 +70,164 @@ public class EnemyMovement : CharacterMovement
         };
         sphere.GetComponent<Renderer>().material = material;
 
-        #endregion SphereHitbox
+        #endregion SphereHitbox        
+        */
+        controller = gameObject.GetComponent<CharacterController>();
 
-        actions = new List<string>();
-        actions.Add("move_front");
-        actions.Add("move_front");
-        actions.Add("move_front");
-        actions.Add("move_front");
-        actions.Add("look_around");
+        velocity = 2.8f; 
+        gravity = -9.81f;
+    }
+
+    // Start is called before the first frame update
+    public override void Start()
+    {
+        base.Start();
+        controller = gameObject.GetComponent<CharacterController>();
     }
 
     // Update is called once per frame
     public override void Update()
     {
-        Movement();
-        ViewAround();
-        ViewAhead();
+        Gravity();
 
-        if (!reverseActions)
+        // Makes the enemy score only once per round Currently: INACTIVE See: IsPlayerVisibleFromHere()
+        if (!scoredThisRound)
         {
-            ExecuteAction(actions[idActions]);
-        }
-        else
-        {
-            ExecuteAction(OpositeOfAction(actions[idActions]));
+            ViewAround();
+            ViewAhead();
         }
 
-        
+        if (targetAngleRotation == 0) {
+            WallAvoider();
+
+        }
+
+        /**
+         * Basically:
+         * 
+         * Is there a rotation necessary? Do it and finishes the update
+         * Is there a movement necessary? Do it and finishes the update
+         * Isn't any rotation or movement necessary? Call the next Action and finishes the update 
+         * 
+         * It counts trough the Action List one by one, when it hits the n, 
+         * it activates "reverse mode" and runs the Action List from n to 0,
+         * looping forever in this patrol pattern
+         * 
+         */
         if (targetAngleRotation != 0)
         {
             Rotate();
         }
-
-
-        if (lastActionFinished)
+        else if(controller.transform.position != targetPosition)
         {
-            idActions++;
-            if (idActions >= actions.Count)
+            Movement();
+        }
+        else
+        {
+            if (idActions == actions.Count)
             {
-                idActions = 0;
                 reverseActions = !reverseActions;
+                idActions--;
+            }
+            if(idActions == -1)
+            {
+                reverseActions = !reverseActions;
+                idActions++;
+            }
+
+            // Runs next action
+            if (!reverseActions)
+            {
+                ExecuteAction(actions[idActions]);
+                idActions++;
+            }
+            else
+            {
+                ExecuteAction(OpositeOfAction(actions[idActions]));
+                idActions--;
+            }
+        }
+    }
+
+    #region AGBehaviourFunctions
+    public void GenerateInitialPatrolPattern(int genes)
+    {
+        this.genes = genes;
+        int randomIndex = 0;
+
+        for (int i = 0; i < genes; i++)
+        {
+            randomIndex = UnityEngine.Random.Range(0, possibleActions.Length);
+            actions.Add(possibleActions[randomIndex]);
+        }
+    }
+
+    public void Cross(EnemyMovement Father, EnemyMovement Mother)
+    {
+        for(int i = 0; i < genes; i++)
+        {
+            if(UnityEngine.Random.value > 0.5f)
+            {
+                actions[i] = Father.actions[i];
+            }
+            else
+            {
+                actions[i] = Mother.actions[i];
             }
         }
 
-
-        // Update the sphere's position and size if necessary
-        sphere.transform.position = transform.position;
-        float diameter = radius * 2;
-        sphere.transform.localScale = new Vector3(diameter, diameter, diameter);
     }
 
+    public void Mutate()
+    {
+        int randomIndex = UnityEngine.Random.Range(0, genes);
+        int randomGene = UnityEngine.Random.Range(0, possibleActions.Length);
+        actions[randomIndex] = possibleActions[randomGene];
+    }
+
+    public void ResetForNextRound(Vector3 spawPoint)
+    {
+        transform.position = spawPoint;
+
+        // Yes it is necessary...
+        controller.enabled = false;
+        controller.transform.position = spawPoint;
+        controller.enabled = true;
+
+        positionBeforeLastMovement = spawPoint;
+        targetPosition = spawPoint;
+
+        targetAngleRotation = 0;
+        transform.Rotate(Vector3.zero);
+
+        idActions = 0;
+        reverseActions = false;
+        
+        score = 0f;
+    }
+    #endregion AGBehaviourFunctions
+
+    #region EnemyBehaviourFunctions
     public override void MoveLogic()
     {
-        
     }
-    
     public void ViewAround()
     {
         // Get all colliders within the circle/sphere
         Collider[] entities = Physics.OverlapSphere(transform.position, radius);
 
         // Loop through the colliders and do something with each one
-        foreach (Collider entity in entities)
+        foreach (Collider target in entities)
         {
-            if (!entity.CompareTag("Player")) {
+            if (!target.CompareTag("Player"))
+            {
                 continue;
             }
 
-            if (entity.TryGetComponent<PlayerMovement>(out var player))
-            {
-                player.Captured();
-            }
-
+            // Is the player visible, or is him on the other side of the wall
+            IsPlayerVisibleFromHere(target);
         }
     }
-
     public void ViewAhead()
     {
         Collider[] targetsInViewRadius = Physics.OverlapSphere(transform.position, viewDistance);
@@ -137,40 +238,49 @@ public class EnemyMovement : CharacterMovement
                 continue;
             }
             
+            // Is the player on the radius of view
             Vector3 dirToTarget = (target.transform.position - transform.position).normalized;
             if (Vector3.Angle(transform.forward, dirToTarget) < viewAngle)
             {
-                float distanceToTarget = Vector3.Distance(transform.position, target.transform.position);
-                Vector3 RaycastOrigin = transform.position + (transform.forward * 2);
-                if (!Physics.Raycast(RaycastOrigin, dirToTarget, distanceToTarget))
-                {
-                    if (!target.CompareTag("Player"))
-                    {
-                        continue;
-                    }
-
-                    if (target.TryGetComponent<PlayerMovement>(out var player))
-                    {
-                        Debug.Log("Player, found!");
-                        player.Captured();
-                    }
-                }
+                // Is the player visible, or is him on the other side of the wall
+                IsPlayerVisibleFromHere(target);
             }
         }
     }
+    public bool IsPlayerVisibleFromHere(Collider target)
+    {
+        Vector3 dirToTarget = (target.transform.position - transform.position).normalized;
 
+        // Create a layer mask that includes all layers except the "EnemyBarrier" layer
+        int layerMask = 1 << LayerMask.NameToLayer("EnemyBarrier");
+        layerMask = ~layerMask;
+
+        float distanceToTarget = Vector3.Distance(transform.position, target.transform.position);
+        if (Physics.Raycast(transform.position, dirToTarget, out RaycastHit hit, distanceToTarget, layerMask))
+        {
+            if (hit.transform.CompareTag("Player"))
+            {
+                if (target.TryGetComponent<PlayerStateMediatorScript>(out var player))
+                {
+                    // Score points for how many time he sees the enemy
+                    score += Time.deltaTime;
+
+                    // Uncoment the following line will make the enemy pontuate only once per round
+                    // scoredThisRound = true;
+                    player.Captured();
+                }
+                return true;
+            }
+        }
+        return false;
+    }
     public void ExecuteAction(string action)
     {
         float difference = 0.0f;
         switch (action)
         {
             case "look_around":
-                lastActionFinished = false;
-                if(targetAngleRotation <= 5)
-                {
-                    lastActionFinished = true;
-                    targetAngleRotation = 360;
-                }
+                targetAngleRotation = 360;
                 
                 break;
             case "look_front":
@@ -184,6 +294,7 @@ public class EnemyMovement : CharacterMovement
                 else 
                 {
                     targetAngleRotation = RoundAngle(difference);
+
                 }
                 break;
             case "look_back":
@@ -200,7 +311,7 @@ public class EnemyMovement : CharacterMovement
                 }
                 break;
             case "look_right":
-                difference = Mathf.DeltaAngle(transform.eulerAngles.y, 90);
+                difference = Mathf.DeltaAngle(transform.eulerAngles.y, -270);
 
                 if (Mathf.Abs(difference) < 0.005f)
                 {
@@ -226,29 +337,76 @@ public class EnemyMovement : CharacterMovement
                 }
                 break;
             case "move_front":
-                if(targetAngleRotation <= 5 && lastActionFinished)
-                {
-                    ExecuteAction("look_front");
-                    lastActionFinished = false;
-                }
-                if(targetAngleRotation <= 5)
-                {
-                    MoveUp();
-                    lastActionFinished = true;
-                }
+                ExecuteAction("look_front");
+                Vector3 targetRotation = Vector3.zero;
+                targetPosition = controller.transform.position;
+                targetPosition += controller.transform.forward * 3;
+                positionBeforeLastMovement = controller.transform.position;
+
                 break;
             case "move_back":
-                if(targetAngleRotation <= 5 && lastActionFinished) { 
-                    ExecuteAction("look_back");
-                    lastActionFinished = false;
-                }
-                if (targetAngleRotation <= 5)
-                {
-                    MoveUp();
-                    lastActionFinished = true;
-                }
+                ExecuteAction("look_back");
+                targetPosition = controller.transform.position;
+                targetPosition += controller.transform.forward * 3;
+                positionBeforeLastMovement = controller.transform.position;
+
+                break;
+            case "move_left":
+                ExecuteAction("look_left");
+                targetPosition = controller.transform.position;
+                targetPosition += controller.transform.forward * 3;
+                positionBeforeLastMovement = controller.transform.position;
+
+                break;
+            case "move_right":
+                ExecuteAction("look_right");
+                targetPosition = controller.transform.position;
+                targetPosition += controller.transform.forward * 3;
+                positionBeforeLastMovement = controller.transform.position;
+
                 break;
 
+        }
+    }
+    public override void Movement()
+    {
+        /*
+         * Snaps the rotation to one of the accepted values
+        */
+        Vector3 rotationSnapping = transform.rotation.eulerAngles;
+        rotationSnapping.y = RoundAngle(rotationSnapping.y);
+        float dif = rotationSnapping.y - transform.rotation.eulerAngles.y;
+        rotationSnapping = new Vector3(0, dif, 0);
+
+        transform.Rotate(rotationSnapping);
+
+        targetPosition = positionBeforeLastMovement + controller.transform.forward * 3;
+        targetPosition.y = 1.08f;
+        Gravity();
+        
+        controller.transform.position = Vector3.MoveTowards(controller.transform.position, targetPosition, velocity * Time.deltaTime);
+    }
+    public void Gravity()
+    {
+        if (!controller.isGrounded)
+        {
+
+        }
+    }
+    public virtual void WallAvoider()
+    {
+        // Create a layer mask that includes all layers except the "PlayerMovement" and "Enemy" layers
+        int layerMask = (1 << LayerMask.NameToLayer("Player")) | (1 << LayerMask.NameToLayer("EnemyLayer"));
+        layerMask = ~layerMask;
+
+        // Cast a ray forward from this game object
+        RaycastHit[] hits = Physics.RaycastAll(transform.position, transform.forward, raycastDistance, layerMask);
+
+        foreach (RaycastHit hit in hits)
+        {
+            positionBeforeLastMovement = transform.position - transform.forward * 3;
+            targetPosition = transform.position;
+            break; // Stop checking after finding the first non-Enemy and non-PlayerMovement object
         }
     }
 
@@ -257,12 +415,13 @@ public class EnemyMovement : CharacterMovement
 
         Vector3 eulers = new Vector3(0, 0, 0);
 
-        if(targetAngleRotation % 5 != 0){
+        if (targetAngleRotation % 5 != 0 && targetAngleRotation > Math.Abs(5))
+        {
             eulers.y = targetAngleRotation;
             targetAngleRotation = 0;
         }
 
-        if(targetAngleRotation > 0)
+        if (targetAngleRotation > 0)
         {
             eulers.y = angleIncrease;
             targetAngleRotation -= angleIncrease;
@@ -277,23 +436,13 @@ public class EnemyMovement : CharacterMovement
     }
     public int RoundAngle(float angle)
     {
-        float[] forbiddenAngles = { 0f, 90f, 180f, 270f, 360f , -180f, -90f};
-        float nearestForbiddenAngle = forbiddenAngles.OrderBy(x => Math.Abs((long)x - angle)).First();
-        if (Math.Abs(nearestForbiddenAngle - angle) > 0) // if the difference is less than 1 degree
-        {
-            while (angle < nearestForbiddenAngle)
-            {
-                angle += 1; // increase the angle if it's less than the forbidden angle
-            }
-         
-            while (angle > nearestForbiddenAngle)
-            {
-                angle -= 1; // decrease the angle if it's more than the forbidden angle
-            }
-        }
+        int[] forbiddenAngles = { 0, 90, 180, 270, 360, -180, -90, -270 };
+        int nearestForbiddenAngle = forbiddenAngles.OrderBy(x => Math.Abs((long)x - angle)).First();
+        
+        angle = nearestForbiddenAngle;
+        
         return (int)angle;
     }
-
     public string OpositeOfAction(string action)
     {
         if(action == "move_front")
@@ -306,6 +455,16 @@ public class EnemyMovement : CharacterMovement
             return "move_front";
         }
 
+        if (action == "move_left")
+        {
+            return "move_right";
+        }
+
+        if (action == "move_right")
+        {
+            return "move_left";
+        }
+
         if (action == "look_around")
         {
             return action;
@@ -314,4 +473,6 @@ public class EnemyMovement : CharacterMovement
         Debug.LogWarning("Code not supposed to be hit!");
         return "warning";
     }
+    #endregion EnemyBehaviourFunctions
+
 }

@@ -1,23 +1,51 @@
+using Cinemachine;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 public class PlayerMovement : CharacterMovement
 {
+    public bool finished = false;
+
+    public bool camPlay = true;
+
+    public bool captured = false;
 
     // Start is called before the first frame update
     public override void Start()
     {
         base.Start();
+
+        // Generate camera for scene
+        GameObject MainCamera = Resources.Load<GameObject>("Main Camera");
+        MainCamera = Instantiate(MainCamera, transform.position, Quaternion.identity);
+
+        GameObject FreeLookCamera = Resources.Load<GameObject>("FreeLook Camera");
+        FreeLookCamera = Instantiate(FreeLookCamera, transform.position, Quaternion.identity);
+
+        CinemachineFreeLook FreeLook = FreeLookCamera.GetComponent<CinemachineFreeLook>();
+        FreeLook.Follow = transform;
+        FreeLook.LookAt = transform;
+
+        cam = MainCamera.transform;
     }
 
     // Update is called once per frame
     public override void Update()
     {
-        Movement();
+        if (camPlay)
+        {
+            Movement();
         
-        PlayerRotation();
+            PlayerRotation();
+        }
     }
+
+
+    #region PlayerRotationAndMovement
+
     // public override void MoveLogic()
     // {
     //     if (Input.GetKey(KeyCode.W))
@@ -38,7 +66,7 @@ public class PlayerMovement : CharacterMovement
     //     }
     // }
 
-    public float speed = 8.0f;
+    public float speed = 16.0f;
     public Transform cam;
     public float turnSmoothTime = 0.1f;
     float turnSmoothVelocity;
@@ -153,9 +181,28 @@ public class PlayerMovement : CharacterMovement
         }
     }
 
+    #endregion PlayerRotationAndMovement
+
+    public void Repositionate(Vector3 spawn)
+    {
+        // The character controller need to be disabled in order to perform thoose suddenly position transiotions
+        controller.enabled = false;
+        transform.position = spawn;
+        controller.enabled = true;
+
+        movement = Vector3.zero;
+    }
+
     public void Captured()
     {
-        Debug.Log("Ouch! They got me!");
+        captured = true;
+        //Debug.Log("Ouch! They got me!!!");
+    }
+
+    public void Escaped()
+    {
+        finished = true;
+        //Debug.Log("PlayerMovement escaped!!!");
     }
 
 }

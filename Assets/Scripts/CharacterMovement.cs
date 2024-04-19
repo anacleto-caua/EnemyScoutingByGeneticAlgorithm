@@ -30,7 +30,7 @@ public abstract class CharacterMovement : MonoBehaviour
         Movement();
     }
 
-    public void Movement()
+    public virtual void Movement()
     {
         if (controller.isGrounded)
         {
