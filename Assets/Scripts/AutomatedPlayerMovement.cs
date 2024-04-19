@@ -18,8 +18,8 @@ public class AutomatedPlayerMovement : EnemyMovement
     // Update is called once per frame
     public override void Update()
     {
-        agent.Move(HeroScape);
-        //base.Update();
+        //agent.Move(HeroScape);
+        base.Update();
 
     }
 

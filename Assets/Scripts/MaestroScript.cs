@@ -75,7 +75,71 @@ public class MaestroScript : MonoBehaviour
         PlayerMovement = Player.GetComponent<PlayerMovement>();
         PlayerAutoMovement = Player.GetComponent<AutomatedPlayerMovement>();
         PlayerAutoMovement.HeroScape = HeroScapePosition;
-        
+        #region PlayerActionsSetManually
+        PlayerAutoMovement.actions.Add("move_back");
+        PlayerAutoMovement.actions.Add("move_back");
+        PlayerAutoMovement.actions.Add("move_back");
+        PlayerAutoMovement.actions.Add("move_back");
+        PlayerAutoMovement.actions.Add("move_back");
+
+        PlayerAutoMovement.actions.Add("move_right");
+        PlayerAutoMovement.actions.Add("move_right");
+        PlayerAutoMovement.actions.Add("move_right");
+        PlayerAutoMovement.actions.Add("move_right");
+
+        PlayerAutoMovement.actions.Add("move_front");
+        PlayerAutoMovement.actions.Add("move_front");
+        PlayerAutoMovement.actions.Add("move_front");
+        PlayerAutoMovement.actions.Add("move_front");
+        PlayerAutoMovement.actions.Add("move_front");
+        PlayerAutoMovement.actions.Add("move_front");
+
+        PlayerAutoMovement.actions.Add("move_right");
+        PlayerAutoMovement.actions.Add("move_right");
+        PlayerAutoMovement.actions.Add("move_right");
+        PlayerAutoMovement.actions.Add("move_right");
+        PlayerAutoMovement.actions.Add("move_right");
+        PlayerAutoMovement.actions.Add("move_right");
+        PlayerAutoMovement.actions.Add("move_right");
+        PlayerAutoMovement.actions.Add("move_right");
+        PlayerAutoMovement.actions.Add("move_right");
+        PlayerAutoMovement.actions.Add("move_right");
+        PlayerAutoMovement.actions.Add("move_right");
+        PlayerAutoMovement.actions.Add("move_right");
+        PlayerAutoMovement.actions.Add("move_right");
+        PlayerAutoMovement.actions.Add("move_right");
+        PlayerAutoMovement.actions.Add("move_right");
+        PlayerAutoMovement.actions.Add("move_right");
+
+        PlayerAutoMovement.actions.Add("move_front");
+        PlayerAutoMovement.actions.Add("move_front");
+        PlayerAutoMovement.actions.Add("move_front");
+        PlayerAutoMovement.actions.Add("move_front");
+        PlayerAutoMovement.actions.Add("move_front");
+        PlayerAutoMovement.actions.Add("move_front");
+        PlayerAutoMovement.actions.Add("move_front");
+        PlayerAutoMovement.actions.Add("move_front");
+        PlayerAutoMovement.actions.Add("move_front");
+        PlayerAutoMovement.actions.Add("move_front");
+        PlayerAutoMovement.actions.Add("move_front");
+        PlayerAutoMovement.actions.Add("move_front");
+        PlayerAutoMovement.actions.Add("move_front");
+
+        PlayerAutoMovement.actions.Add("move_left");
+        PlayerAutoMovement.actions.Add("move_left");
+        PlayerAutoMovement.actions.Add("move_left");
+        PlayerAutoMovement.actions.Add("move_left");
+        PlayerAutoMovement.actions.Add("move_left");
+        PlayerAutoMovement.actions.Add("move_left");
+        PlayerAutoMovement.actions.Add("move_left");
+        PlayerAutoMovement.actions.Add("move_left");
+        PlayerAutoMovement.actions.Add("move_left");
+        PlayerAutoMovement.actions.Add("move_left");
+        PlayerAutoMovement.actions.Add("move_left");
+        PlayerAutoMovement.actions.Add("move_left");
+        PlayerAutoMovement.actions.Add("move_left");
+        #endregion PlayerActionsSetManually
+
         DisablePlayerMovement();
         EnablePlayerAutomatedMovement();
 
@@ -87,6 +151,10 @@ public class MaestroScript : MonoBehaviour
         HeroScape = Instantiate(HeroScapePrefab, HeroScapePosition, Quaternion.identity).GetComponent<HeroScapeScript>();
 
         //Add an enemy barrier arround the hero scape
+        // .......................
+
+        // Set time scale high so the training will be faster
+        Time.timeScale = 5;
     }
 
 
@@ -102,7 +170,6 @@ public class MaestroScript : MonoBehaviour
             }
             playerWillPlayNextRound = false;
             PlayerAutoMovement.finished = true;
-
             EnablePlayerAutomatedMovement();
             DisablePlayerMovement();
             
@@ -128,8 +195,15 @@ public class MaestroScript : MonoBehaviour
 
             if (playerWillPlayNextRound)
             {
+                // Set time scale to default so player can feel ok playing
+                Time.timeScale = 1; 
                 DisablePlayerAutomatedMovement();
                 EnablePlayerMovement();
+            }
+            else
+            {
+                // Set time scale high so the training will be faster
+                Time.timeScale = 5;
             }
         }
 
