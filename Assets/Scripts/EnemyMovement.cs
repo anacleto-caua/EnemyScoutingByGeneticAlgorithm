@@ -25,12 +25,12 @@ public class EnemyMovement : CharacterMovement
 
 
     public int angleIncrease = 5;
-    int targetAngleRotation = 0;
+    protected int targetAngleRotation = 0;
 
-    Vector3 targetPosition;
-    Vector3 positionBeforeLastMovement;
+    protected Vector3 targetPosition;
+    protected Vector3 positionBeforeLastMovement;
 
-    float raycastDistance = 0.1f;  // The distance the raycast will check
+    protected float raycastDistance = 0.1f;  // The distance the raycast will check
 
     #region AGParameters
     int genes;
@@ -72,6 +72,7 @@ public class EnemyMovement : CharacterMovement
 
         #endregion SphereHitbox        
         */
+        controller = gameObject.GetComponent<CharacterController>();
 
         velocity = 2.8f; 
         gravity = -9.81f;
@@ -81,6 +82,7 @@ public class EnemyMovement : CharacterMovement
     public override void Start()
     {
         base.Start();
+        controller = gameObject.GetComponent<CharacterController>();
     }
 
     // Update is called once per frame
@@ -186,6 +188,12 @@ public class EnemyMovement : CharacterMovement
     public void ResetForNextRound(Vector3 spawPoint)
     {
         transform.position = spawPoint;
+
+        // Yes it is necessary...
+        controller.enabled = false;
+        controller.transform.position = spawPoint;
+        controller.enabled = true;
+
         positionBeforeLastMovement = spawPoint;
         targetPosition = spawPoint;
 
@@ -194,6 +202,8 @@ public class EnemyMovement : CharacterMovement
 
         idActions = 0;
         reverseActions = false;
+        
+        score = 0f;
     }
     #endregion AGBehaviourFunctions
 
@@ -237,7 +247,6 @@ public class EnemyMovement : CharacterMovement
             }
         }
     }
-
     public bool IsPlayerVisibleFromHere(Collider target)
     {
         Vector3 dirToTarget = (target.transform.position - transform.position).normalized;
@@ -251,7 +260,7 @@ public class EnemyMovement : CharacterMovement
         {
             if (hit.transform.CompareTag("Player"))
             {
-                if (target.TryGetComponent<PlayerMovement>(out var player))
+                if (target.TryGetComponent<PlayerStateMediatorScript>(out var player))
                 {
                     // Score points for how many time he sees the enemy
                     score += Time.deltaTime;
@@ -362,6 +371,7 @@ public class EnemyMovement : CharacterMovement
     public override void Movement()
     {
         /*
+         * Snaps the rotation to one of the accepted values
         */
         Vector3 rotationSnapping = transform.rotation.eulerAngles;
         rotationSnapping.y = RoundAngle(rotationSnapping.y);
@@ -371,7 +381,7 @@ public class EnemyMovement : CharacterMovement
         transform.Rotate(rotationSnapping);
 
         targetPosition = positionBeforeLastMovement + controller.transform.forward * 3;
-        
+        targetPosition.y = 1.08f;
         Gravity();
         
         controller.transform.position = Vector3.MoveTowards(controller.transform.position, targetPosition, velocity * Time.deltaTime);
@@ -380,17 +390,13 @@ public class EnemyMovement : CharacterMovement
     {
         if (!controller.isGrounded)
         {
-            Vector3 gr = Vector3.zero;
-            gr.y = gravity * Time.deltaTime;
-            controller.Move(gr);
-            targetPosition.y = controller.transform.position.y;
-            positionBeforeLastMovement.y = controller.transform.position.y;
+
         }
     }
-    public void WallAvoider()
+    public virtual void WallAvoider()
     {
-        // Create a layer mask that includes all layers except the "Player" and "Enemy" layers
-        int layerMask = (1 << LayerMask.NameToLayer("Player")) | (1 << LayerMask.NameToLayer("Enemy"));
+        // Create a layer mask that includes all layers except the "PlayerMovement" and "Enemy" layers
+        int layerMask = (1 << LayerMask.NameToLayer("Player")) | (1 << LayerMask.NameToLayer("EnemyLayer"));
         layerMask = ~layerMask;
 
         // Cast a ray forward from this game object
@@ -400,7 +406,7 @@ public class EnemyMovement : CharacterMovement
         {
             positionBeforeLastMovement = transform.position - transform.forward * 3;
             targetPosition = transform.position;
-            break; // Stop checking after finding the first non-Enemy and non-Player object
+            break; // Stop checking after finding the first non-Enemy and non-PlayerMovement object
         }
     }
 

@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 public class MaestroScript : MonoBehaviour
 {
@@ -20,7 +21,8 @@ public class MaestroScript : MonoBehaviour
 
     #region FunctionalVariables
     public Vector3 PlayerSpawnPoint;
-    public PlayerMovement Player;
+    public PlayerMovement PlayerMovement;
+    public AutomatedPlayerMovement PlayerAutoMovement;
 
     GameObject EnemyPrefab;
     public List<Vector3> EnemySpawns;
@@ -40,11 +42,12 @@ public class MaestroScript : MonoBehaviour
         removePercent = 50;
         mutantionChance = 20;
 
-        PlayerSpawnPoint = new Vector3(0f, 2f, 0f);
-        HeroScapePosition = new Vector3(20f, 0f, 0f);
+        // Commented because I'm inserting the data on the editor window
+        //PlayerSpawnPoint = new Vector3(0f, 2f, 0f);
+        //HeroScapePosition = new Vector3(20f, 0f, 0f);
 
-        EnemySpawns = new List<Vector3>();
-        EnemySpawns.Add(new Vector3(12f, 2f, -1f));
+        //EnemySpawns = new List<Vector3>();
+        //EnemySpawns.Add(new Vector3(12f, 2f, -1f));
 
         EnemyPrefab = Resources.Load<GameObject>("Enemy");
         
@@ -53,7 +56,6 @@ public class MaestroScript : MonoBehaviour
 
         // Generating enemies on the scene AND generating their initial path
         // For each enemy spawn run a for loop and add individuals Enemy to the Enemies array
-        Debug.Log("Generating enemies!");
         int count = 0;
         foreach (Vector3 spawn in EnemySpawns)
         {
@@ -69,10 +71,16 @@ public class MaestroScript : MonoBehaviour
 
         //Add one player to the scene at the set spawn point
         GameObject PlayerPrefab = Resources.Load<GameObject>("Player");
-        Player = Instantiate(PlayerPrefab, PlayerSpawnPoint, Quaternion.identity).GetComponent<PlayerMovement>();
+        GameObject Player = Instantiate(PlayerPrefab, PlayerSpawnPoint, Quaternion.identity);
+        PlayerMovement = Player.GetComponent<PlayerMovement>();
+        PlayerAutoMovement = Player.GetComponent<AutomatedPlayerMovement>();
+        PlayerAutoMovement.HeroScape = HeroScapePosition;
         
+        DisablePlayerMovement();
+        EnablePlayerAutomatedMovement();
+
         //Add an enemy barrier arround the spawn
-        GameObject AntiEnemySphere = Resources.Load<GameObject>("AntiEnemySphere");
+        //GameObject AntiEnemySphere = Resources.Load<GameObject>("AntiEnemySphere");
 
         //Add one hero scape to the scene at the set spawn point
         GameObject HeroScapePrefab = Resources.Load<GameObject>("HeroScape");
@@ -81,26 +89,55 @@ public class MaestroScript : MonoBehaviour
         //Add an enemy barrier arround the hero scape
     }
 
-    // Update is called once per frame
+
+    public bool playerWillPlayNextRound = false;
     void Update()
     {
-        if(Player.finished)
+        if (PlayerMovement.finished && playerWillPlayNextRound)
+        {
+            OrderEnemiesList();
+            if (Enemies[0][0].score > 0)
+            {
+                Debug.Log("Foi capturado!");
+            }
+            playerWillPlayNextRound = false;
+            PlayerAutoMovement.finished = true;
+
+            EnablePlayerAutomatedMovement();
+            DisablePlayerMovement();
+            
+        }
+        
+        if(PlayerAutoMovement.finished)
         {
             Debug.Log("Round " + rounds + " finished, re-ordering for the next round");
             rounds++;
 
             OrderEnemiesList();
-            Debug.Log("Enemy 0 p: " + Enemies[0][0].score);
-            Debug.Log("Enemy 1 p: " + Enemies[0][1].score);
-            Debug.Log("Enemy 2 p: " + Enemies[0][2].score);
-            Debug.Log("Enemy n p: " + Enemies[0].Last().score);
+            Debug.Log("00 enemy score: " + Enemies[0][0].score);
+            Debug.Log("01 enemy score: " + Enemies[0][1].score);
+            Debug.Log("02 enemy score: " + Enemies[0][2].score);
+            Debug.Log("Last enemy score: " + Enemies[0].Last().score);
 
             // Override the low pontuation individuals with crosses of the individuals on list
             CrossToReplaceRemovedEnemies();
 
             RepositinateEntities();
 
-            Player.finished = false;
+            PlayerAutoMovement.finished = false;
+
+            if (playerWillPlayNextRound)
+            {
+                DisablePlayerAutomatedMovement();
+                EnablePlayerMovement();
+            }
+        }
+
+        // If the user press the L key he can play on the next round
+        if (Input.GetKey(KeyCode.L))
+        {
+            playerWillPlayNextRound = true;
+            Debug.Log("You gonna play when this round finishes!");
         }
         
     }
@@ -116,7 +153,7 @@ public class MaestroScript : MonoBehaviour
 
     public void CrossToReplaceRemovedEnemies()
     {
-        int cutFrom = (individuals / 100) * (100 - (int)removePercent);
+        int cutFrom = individuals * (100 - (int)removePercent) / 100;
         int count = 0; // Count the enemy spawns list id
         foreach (List<EnemyMovement> EnemyList in Enemies)
         {
@@ -128,7 +165,7 @@ public class MaestroScript : MonoBehaviour
                 {
                     ind = 0;
                 }
-                
+
                 EnemyList[i].Cross(EnemyList[ind], EnemyList[ind+1]);
                 ind++;
 
@@ -146,7 +183,9 @@ public class MaestroScript : MonoBehaviour
     public void RepositinateEntities()
     {
         // Reposition player
-        Player.Repositionate(PlayerSpawnPoint);
+        PlayerMovement.Repositionate(PlayerSpawnPoint);
+        PlayerAutoMovement.Repositionate(PlayerSpawnPoint);
+        PlayerAutoMovement.ResetForNextRound(PlayerSpawnPoint);
 
         // Reposition enemies
         int count = 0;
@@ -160,4 +199,24 @@ public class MaestroScript : MonoBehaviour
         }
     }
     #endregion AGFunctions
+
+    #region Disable&EnablePlayerScripts
+    public void DisablePlayerMovement() { 
+        //PlayerMovement.GetComponent<PlayerMovement>().enabled = false;
+        PlayerMovement.GetComponent<PlayerMovement>().camPlay = false;
+    }
+    public void DisablePlayerAutomatedMovement() {
+        PlayerMovement.GetComponent<AutomatedPlayerMovement>().enabled = false;
+    }
+    public void EnablePlayerMovement()
+    {
+        //PlayerMovement.GetComponent<PlayerMovement>().enabled = true;
+        PlayerMovement.GetComponent<PlayerMovement>().camPlay= true;
+    }
+    public void EnablePlayerAutomatedMovement()
+    {
+        PlayerMovement.GetComponent<AutomatedPlayerMovement>().enabled = true;
+    }
+    #endregion Disable&EnablePlayerScripts
+
 }

@@ -118,6 +118,9 @@ GameObject:
   - component: {fileID: 9010798322201961044}
   - component: {fileID: 4789950828422308174}
   - component: {fileID: 7560989672504073543}
+  - component: {fileID: 8887141105704260032}
+  - component: {fileID: 6408075212110291698}
+  - component: {fileID: -5078345369267842581}
   m_Layer: 3
   m_Name: Player
   m_TagString: Player
@@ -134,7 +137,7 @@ Transform:
   m_GameObject: {fileID: 4874605180641686439}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 2, z: 0}
+  m_LocalPosition: {x: 0, y: 1.08, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -233,9 +236,75 @@ MonoBehaviour:
   velocity: 0
   gravity: 0
   movement: {x: 0, y: 0, z: 0}
-  speed: 5
+  finished: 0
+  camPlay: 0
+  speed: 16
   cam: {fileID: 0}
   turnSmoothTime: 0.1
   rotationSpeed: 1
   make360: 0
   rotate90: 0
+--- !u!114 &8887141105704260032
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4874605180641686439}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d2ebf71c6e8552e46934e03165088335, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  controller: {fileID: 4789950828422308174}
+  velocity: 0
+  gravity: 0
+  movement: {x: 0, y: 0, z: 0}
+  actions: []
+  idActions: 0
+  reverseActions: 0
+  possibleActions:
+  - move_front
+  - move_back
+  - move_right
+  - move_left
+  - look_around
+  angleIncrease: 5
+  score: 0
+  agent: {fileID: -5078345369267842581}
+  finished: 0
+  HeroScape: {x: 0, y: 0, z: 0}
+--- !u!114 &6408075212110291698
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4874605180641686439}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8a443bfd9181bc34f9d1fb6c620f3227, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!195 &-5078345369267842581
+NavMeshAgent:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4874605180641686439}
+  m_Enabled: 1
+  m_AgentTypeID: 0
+  m_Radius: 0.5
+  m_Speed: 3.5
+  m_Acceleration: 8
+  avoidancePriority: 50
+  m_AngularSpeed: 120
+  m_StoppingDistance: 0
+  m_AutoTraverseOffMeshLink: 1
+  m_AutoBraking: 1
+  m_AutoRepath: 1
+  m_Height: 2
+  m_BaseOffset: 1
+  m_WalkableMask: 4294967295
+  m_ObstacleAvoidanceType: 4

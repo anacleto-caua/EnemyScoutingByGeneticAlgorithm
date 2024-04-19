@@ -23,9 +23,9 @@ public class HeroScapeScript : MonoBehaviour
             return;
         }
 
-        if (collider.TryGetComponent<PlayerMovement>(out var player))
+        if (collider.TryGetComponent<PlayerStateMediatorScript>(out var player))
         {
-            // Player escaped!
+            // PlayerMovement escaped!
             player.Escaped();
         }
 

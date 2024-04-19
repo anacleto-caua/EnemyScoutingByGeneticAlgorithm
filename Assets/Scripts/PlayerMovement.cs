@@ -2,10 +2,13 @@ using Cinemachine;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 public class PlayerMovement : CharacterMovement
 {
     public bool finished = false;
+
+    public bool camPlay = true;
 
     // Start is called before the first frame update
     public override void Start()
@@ -29,9 +32,12 @@ public class PlayerMovement : CharacterMovement
     // Update is called once per frame
     public override void Update()
     {
-        Movement();
+        if (camPlay)
+        {
+            Movement();
         
-        PlayerRotation();
+            PlayerRotation();
+        }
     }
 
 
@@ -57,7 +63,7 @@ public class PlayerMovement : CharacterMovement
     //     }
     // }
 
-    public float speed = 8.0f;
+    public float speed = 16.0f;
     public Transform cam;
     public float turnSmoothTime = 0.1f;
     float turnSmoothVelocity;
@@ -176,10 +182,11 @@ public class PlayerMovement : CharacterMovement
 
     public void Repositionate(Vector3 spawn)
     {
+        // The character controller need to be disabled in order to perform thoose suddenly position transiotions
+        controller.enabled = false;
         transform.position = spawn;
-        gameObject.transform.position = spawn;
-        cam.position = spawn;
-        controller.transform.position = spawn;
+        controller.enabled = true;
+
         movement = Vector3.zero;
     }
 
@@ -191,7 +198,7 @@ public class PlayerMovement : CharacterMovement
     public void Escaped()
     {
         finished = true;
-        //Debug.Log("Player escaped!!!");
+        //Debug.Log("PlayerMovement escaped!!!");
     }
 
 }
