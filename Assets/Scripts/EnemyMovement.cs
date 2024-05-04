@@ -30,7 +30,7 @@ public class EnemyMovement : CharacterMovement
     protected Vector3 targetPosition;
     protected Vector3 positionBeforeLastMovement;
 
-    protected float raycastDistance = 0.1f;  // The distance the raycast will check
+    protected float raycastDistance = 0.5f;  // The distance the raycast will check
 
     #region AGParameters
     int genes;
@@ -251,9 +251,12 @@ public class EnemyMovement : CharacterMovement
     {
         Vector3 dirToTarget = (target.transform.position - transform.position).normalized;
 
-        // Create a layer mask that includes all layers except the "EnemyBarrier" layer
-        int layerMask = 1 << LayerMask.NameToLayer("EnemyBarrier");
-        layerMask = ~layerMask;
+        // Create a layer mask that includes all layers
+        int layerMask = ~0;
+
+        // Exclude the "EnemyBarrier" and "EnemyLayer" layers
+        layerMask = layerMask & ~(1 << LayerMask.NameToLayer("EnemyBarrier"));
+        layerMask = layerMask & ~(1 << LayerMask.NameToLayer("EnemyLayer"));
 
         float distanceToTarget = Vector3.Distance(transform.position, target.transform.position);
         if (Physics.Raycast(transform.position, dirToTarget, out RaycastHit hit, distanceToTarget, layerMask))
@@ -395,19 +398,16 @@ public class EnemyMovement : CharacterMovement
     }
     public virtual void WallAvoider()
     {
-        // Create a layer mask that includes all layers except the "PlayerMovement" and "Enemy" layers
-        int layerMask = (1 << LayerMask.NameToLayer("Player")) | (1 << LayerMask.NameToLayer("EnemyLayer"));
-        layerMask = ~layerMask;
+        int layerMask = ~0;
+        // Exclude the "Player" and "Enemy" layers
+        layerMask = layerMask & ~(1 << LayerMask.NameToLayer("Player"));
+        layerMask = layerMask & ~(1 << LayerMask.NameToLayer("EnemyLayer"));
 
-        // Cast a ray forward from this game object
-        RaycastHit[] hits = Physics.RaycastAll(transform.position, transform.forward, raycastDistance, layerMask);
-
-        foreach (RaycastHit hit in hits)
-        {
+        if (Physics.Raycast(transform.position, transform.forward, raycastDistance, layerMask)){
             positionBeforeLastMovement = transform.position - transform.forward * 3;
-            targetPosition = transform.position;
-            break; // Stop checking after finding the first non-Enemy and non-PlayerMovement object
+            targetPosition = controller.transform.position;
         }
+       
     }
 
     public void Rotate()

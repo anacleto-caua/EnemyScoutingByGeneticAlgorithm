@@ -34,7 +34,7 @@ public class PlayerMovement : CharacterMovement
         cam = PlayerCamera.transform;
     }
 
-    // Update is called once per frame
+    // Update is called once per frame  
     public override void Update()
     {
         if (camPlay)

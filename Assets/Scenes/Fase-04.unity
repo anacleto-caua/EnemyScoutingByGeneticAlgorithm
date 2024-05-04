@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 705507994}
-  m_IndirectSpecularColor: {r: 0.18028328, g: 0.22571328, b: 0.3069218, a: 1}
+  m_IndirectSpecularColor: {r: 0.18028378, g: 0.22571412, b: 0.30692285, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -278,7 +278,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5174687775115468355, guid: 344855f5cdbcf7040bd0976bbdfa82b9, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -30
+      value: -32.8
       objectReference: {fileID: 0}
     - target: {fileID: 5174687775115468355, guid: 344855f5cdbcf7040bd0976bbdfa82b9, type: 3}
       propertyPath: m_LocalPosition.y
@@ -286,7 +286,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5174687775115468355, guid: 344855f5cdbcf7040bd0976bbdfa82b9, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0
+      value: 0.7
       objectReference: {fileID: 0}
     - target: {fileID: 5174687775115468355, guid: 344855f5cdbcf7040bd0976bbdfa82b9, type: 3}
       propertyPath: m_LocalRotation.w
@@ -318,12 +318,16 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7413712249104226184, guid: 344855f5cdbcf7040bd0976bbdfa82b9, type: 3}
       propertyPath: genes
-      value: 50
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 7413712249104226184, guid: 344855f5cdbcf7040bd0976bbdfa82b9, type: 3}
       propertyPath: rounds
       value: 100
       objectReference: {fileID: 0}
+    - target: {fileID: 7413712249104226184, guid: 344855f5cdbcf7040bd0976bbdfa82b9, type: 3}
+      propertyPath: HeroScape
+      value: 
+      objectReference: {fileID: 4465584783263062812, guid: d88574da55773d44c990e583ee470bba, type: 3}
     - target: {fileID: 7413712249104226184, guid: 344855f5cdbcf7040bd0976bbdfa82b9, type: 3}
       propertyPath: MaestroCamera
       value: 
@@ -334,7 +338,35 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7413712249104226184, guid: 344855f5cdbcf7040bd0976bbdfa82b9, type: 3}
       propertyPath: mutantionChance
-      value: 10
+      value: 20
+      objectReference: {fileID: 0}
+    - target: {fileID: 7413712249104226184, guid: 344855f5cdbcf7040bd0976bbdfa82b9, type: 3}
+      propertyPath: PlayerSpawnPoint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7413712249104226184, guid: 344855f5cdbcf7040bd0976bbdfa82b9, type: 3}
+      propertyPath: HeroScapePosition.x
+      value: 45.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 7413712249104226184, guid: 344855f5cdbcf7040bd0976bbdfa82b9, type: 3}
+      propertyPath: HeroScapePosition.z
+      value: -24
+      objectReference: {fileID: 0}
+    - target: {fileID: 7413712249104226184, guid: 344855f5cdbcf7040bd0976bbdfa82b9, type: 3}
+      propertyPath: EnemySpawns.Array.data[0].x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7413712249104226184, guid: 344855f5cdbcf7040bd0976bbdfa82b9, type: 3}
+      propertyPath: EnemySpawns.Array.data[0].z
+      value: -22
+      objectReference: {fileID: 0}
+    - target: {fileID: 7413712249104226184, guid: 344855f5cdbcf7040bd0976bbdfa82b9, type: 3}
+      propertyPath: EnemySpawns.Array.data[1].x
+      value: 34
+      objectReference: {fileID: 0}
+    - target: {fileID: 7413712249104226184, guid: 344855f5cdbcf7040bd0976bbdfa82b9, type: 3}
+      propertyPath: EnemySpawns.Array.data[1].z
+      value: 24
       objectReference: {fileID: 0}
     - target: {fileID: 8193183177422455363, guid: 344855f5cdbcf7040bd0976bbdfa82b9, type: 3}
       propertyPath: m_Name

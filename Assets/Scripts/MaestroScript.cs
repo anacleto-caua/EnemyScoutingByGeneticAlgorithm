@@ -76,6 +76,56 @@ public class MaestroScript : MonoBehaviour
         PlayerAutoMovement = Player.GetComponent<AutomatedPlayerMovement>();
         PlayerAutoMovement.HeroScape = HeroScapePosition;
         #region PlayerActionsSetManually
+
+        PlayerAutoMovement.actions.Add("move_right");
+        PlayerAutoMovement.actions.Add("move_right");
+        PlayerAutoMovement.actions.Add("move_right");
+        PlayerAutoMovement.actions.Add("move_right");
+        PlayerAutoMovement.actions.Add("move_right");
+        PlayerAutoMovement.actions.Add("move_right");
+        PlayerAutoMovement.actions.Add("move_right");
+        PlayerAutoMovement.actions.Add("move_right");
+        PlayerAutoMovement.actions.Add("move_right");
+        PlayerAutoMovement.actions.Add("move_right");
+        PlayerAutoMovement.actions.Add("move_right");
+        PlayerAutoMovement.actions.Add("move_right");
+        PlayerAutoMovement.actions.Add("move_right");
+        PlayerAutoMovement.actions.Add("move_right");
+        PlayerAutoMovement.actions.Add("move_right");
+        PlayerAutoMovement.actions.Add("move_right");
+        PlayerAutoMovement.actions.Add("move_right");
+        PlayerAutoMovement.actions.Add("move_right");
+        PlayerAutoMovement.actions.Add("move_right");
+        PlayerAutoMovement.actions.Add("move_right");
+        PlayerAutoMovement.actions.Add("move_right");
+        PlayerAutoMovement.actions.Add("move_right");
+        PlayerAutoMovement.actions.Add("move_right");
+
+
+        PlayerAutoMovement.actions.Add("move_back");
+        PlayerAutoMovement.actions.Add("move_back");
+        PlayerAutoMovement.actions.Add("move_back");
+        PlayerAutoMovement.actions.Add("move_back");
+        PlayerAutoMovement.actions.Add("move_back");
+        PlayerAutoMovement.actions.Add("move_back");
+        PlayerAutoMovement.actions.Add("move_back");
+        PlayerAutoMovement.actions.Add("move_back");
+
+
+        PlayerAutoMovement.actions.Add("move_right");
+        PlayerAutoMovement.actions.Add("move_right");
+        PlayerAutoMovement.actions.Add("move_right");
+        PlayerAutoMovement.actions.Add("move_right");
+        PlayerAutoMovement.actions.Add("move_right");
+        PlayerAutoMovement.actions.Add("move_right");
+        PlayerAutoMovement.actions.Add("move_right");
+        PlayerAutoMovement.actions.Add("move_right");
+        PlayerAutoMovement.actions.Add("move_right");
+        PlayerAutoMovement.actions.Add("move_right");
+
+
+
+        /*
         PlayerAutoMovement.actions.Add("move_back");
         PlayerAutoMovement.actions.Add("move_back");
         PlayerAutoMovement.actions.Add("move_back");
@@ -138,6 +188,7 @@ public class MaestroScript : MonoBehaviour
         PlayerAutoMovement.actions.Add("move_left");
         PlayerAutoMovement.actions.Add("move_left");
         PlayerAutoMovement.actions.Add("move_left");
+        */
         #endregion PlayerActionsSetManually
 
         DisablePlayerMovement();
@@ -234,6 +285,9 @@ public class MaestroScript : MonoBehaviour
             }
             else
             {
+                // Undo cameras change
+                MaestroCamera.enabled = true;
+                PlayerMovement.PlayerCamera.enabled = false;
                 // Set time scale high so the training will be faster
                 Time.timeScale = 10;
             }
